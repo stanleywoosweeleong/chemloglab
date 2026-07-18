@@ -337,21 +337,22 @@ header{
   border:1.5px solid var(--accent);box-shadow:0 1px 2px rgba(18,33,23,.06)}
 
 /* rate line: [amount] [g|kg] per [N] L  — reads like the label */
-.rate-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+.rate-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;
   background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 .rate-line:focus-within{border-color:var(--accent)}
 .rate-line.locked{opacity:.55}
-.rate-in.amt{flex:0 1 4.5em;min-width:3.5em;background:var(--panel);border:1px solid var(--line);
-  border-radius:8px;padding:11px 8px;font-size:18px;font-weight:700;font-family:var(--mono);text-align:center;color:var(--ink)}
+.rate-in.amt{flex:0 0 4.2em;min-width:0;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:11px 4px;font-size:18px;font-weight:700;font-family:var(--mono);text-align:center;color:var(--ink)}
 .rate-in.amt:focus{outline:none;border-color:var(--accent)}
 .unit-seg{display:flex;flex:none;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
-.unit-btn{border:none;background:transparent;color:var(--dim);padding:11px 12px;font-size:15px;font-weight:650;
+.unit-btn{border:none;background:transparent;color:var(--dim);padding:11px 11px;font-size:15px;font-weight:650;
   font-family:var(--mono);cursor:pointer;border-right:1px solid var(--line)}
 .unit-btn:last-child{border-right:none}
 .unit-btn.on{background:var(--accent);color:#fff}
 .rate-per{color:var(--dim);font-size:14px;flex:none}
-.basis-in{flex:0 1 4em;min-width:3em;text-align:center;background:var(--panel);border:1px solid var(--line);
-  border-radius:8px;padding:11px 8px;font-size:18px;font-weight:700;font-family:var(--mono);color:var(--ink)}
+.basis-grp{display:flex;align-items:center;gap:6px;flex:1 1 5em;min-width:4.5em}
+.basis-in{flex:1 1 auto;min-width:2.5em;width:0;text-align:center;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:11px 6px;font-size:18px;font-weight:700;font-family:var(--mono);color:var(--ink)}
 .basis-in:focus{outline:none;border-color:var(--accent)}
 .rate-perL{color:var(--dim);font-size:15px;font-weight:650;font-family:var(--mono);flex:none}
 
@@ -1368,8 +1369,10 @@ function renderChems(){
           <button class="unit-btn ${rUnit===u2?'on':''}" data-unit="${u2}">${u2}</button>
         </div>
         <span class="rate-per">${S.perWord}</span>
-        <input class="basis-in" name="perLitres" aria-label="${S.ariaBasis}" inputmode="decimal" type="text" value="${(c.basis!=null?String(c.basis):'').replace(/"/g,'&quot;')}" placeholder="">
-        <span class="rate-perL">L</span>
+        <div class="basis-grp">
+          <input class="basis-in" name="perLitres" aria-label="${S.ariaBasis}" inputmode="decimal" type="text" value="${(c.basis!=null?String(c.basis):'').replace(/"/g,'&quot;')}" placeholder="">
+          <span class="rate-perL">L</span>
+        </div>
       </div>`}
       <div class="result">
         <span class="lab">${S.perTank}</span>
