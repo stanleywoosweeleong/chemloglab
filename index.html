@@ -233,17 +233,19 @@ header{
 .rows-sec{padding-left:13px;margin-top:4px}
 .rows-total{font-size:13px;color:var(--accent);font-weight:650;margin-bottom:7px}
 .row-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;margin-bottom:8px}
-.row-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+.row-row{display:flex;flex-direction:column;gap:8px;
   background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
-.row-name{width:4.4em;min-width:4.4em;flex:none;background:var(--panel);border:1px solid var(--line);
-  border-radius:8px;padding:10px 6px;font-size:16px;font-weight:650;color:var(--ink);text-align:center}
+.rr-head{display:flex;align-items:center;gap:10px}
+.rr-trees{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+.row-name{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:10px 10px;font-size:16px;font-weight:650;color:var(--ink)}
 .row-name:focus{outline:none;border-color:var(--accent)}
-.rt-from,.rt-to{width:3.8em;min-width:3.8em;flex:none;text-align:center;background:var(--panel);
-  border:1px solid var(--line);border-radius:8px;padding:11px 6px;font-size:16px;font-family:var(--mono);color:var(--ink)}
+.rt-from,.rt-to{flex:0 0 3em;min-width:0;width:3em;text-align:center;background:var(--panel);
+  border:1px solid var(--line);border-radius:8px;padding:11px 3px;font-size:16px;font-family:var(--mono);color:var(--ink)}
 .rt-from:focus,.rt-to:focus{outline:none;border-color:var(--accent)}
-.rt-count{font-size:14px;color:var(--accent);font-weight:600;flex:1;min-width:60px}
+.rt-count{font-size:13px;color:var(--accent);font-weight:600;flex:1;min-width:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rt-count.err{color:var(--red)}
-.row-del{flex:none;margin-left:auto;border:1px solid var(--line);background:transparent;color:var(--dim2);
+.row-del{flex:none;border:1px solid var(--line);background:transparent;color:var(--dim2);
   width:42px;height:42px;border-radius:10px;font-size:16px;cursor:pointer}
 .row-gen-row{display:flex;gap:8px}
 .row-add-row{display:flex;gap:8px;margin-bottom:8px}
@@ -1746,13 +1748,17 @@ function rowsSectionHTML(z,S,total){
     const rc=rangeCount(r.tFrom,r.tTo);
     return `
     <div class="row-row" data-rid="${r.id}">
-      <input class="row-name" name="rowName" aria-label="${S.ariaRowName}" value="${esc(r.name)}">
-      <span class="zt-lab">${S.treesLab}</span>
-      <input class="rt-from" name="rowTreeFrom" aria-label="${S.ariaTreeFrom}" inputmode="numeric" type="text" value="${esc(r.tFrom)}">
-      <span class="zt-dash">–</span>
-      <input class="rt-to" name="rowTreeTo" aria-label="${S.ariaTreeTo}" inputmode="numeric" type="text" value="${esc(r.tTo)}">
-      <span class="rt-count">${rc?S.treesCount(rc):""}</span>
-      <button class="row-del" aria-label="delete">🗑</button>
+      <div class="rr-head">
+        <input class="row-name" name="rowName" aria-label="${S.ariaRowName}" value="${esc(r.name)}">
+        <button class="row-del" aria-label="delete">🗑</button>
+      </div>
+      <div class="rr-trees">
+        <span class="zt-lab">${S.treesLab}</span>
+        <input class="rt-from" name="rowTreeFrom" aria-label="${S.ariaTreeFrom}" inputmode="numeric" type="text" value="${esc(r.tFrom)}">
+        <span class="zt-dash">–</span>
+        <input class="rt-to" name="rowTreeTo" aria-label="${S.ariaTreeTo}" inputmode="numeric" type="text" value="${esc(r.tTo)}">
+        <span class="rt-count">${rc?S.treesCount(rc):""}</span>
+      </div>
     </div>`;}).join("");
   return `
     <div class="rows-sec">
@@ -1870,6 +1876,13 @@ function renderFarmList(){
           const z=findZone(f.id,zid), tc=zoneTreeCount(z);
           zcount.textContent = tc?S.treesCount(tc):""; const bad=(zfrom.value&&zto.value&&tc===0);
           zcount.classList.toggle("err", !!bad); if(bad) zcount.textContent=S.treesBad;
+          // zone collapsed summary + farm-level total, live
+          const zsum=zr.querySelector(".zone-sum");
+          if(zsum){ const zt=zoneTotalTrees(z);
+            zsum.textContent = z.hasRows ? S.zoneSummaryRows(alive(z.rows).length, zt) : (zt>0?S.treesCount(zt):S.zoneNoTrees); }
+          const farmCard=zr.closest(".farm-card");
+          const ztg=farmCard&&farmCard.querySelector(".ztg-label");
+          if(ztg) ztg.textContent=S.zonesCount(alive(f.zones).length, farmTotalTrees(f));
         };
         zfrom.oninput=onTrees; zto.oninput=onTrees;
       }
@@ -1887,9 +1900,18 @@ function renderFarmList(){
             const cnt=rangeCount(rf.value, rt.value);
             rc.textContent = cnt?S.treesCount(cnt):""; const bad=(rf.value&&rt.value&&cnt===0);
             rc.classList.toggle("err", !!bad); if(bad) rc.textContent=S.treesBad;
-            // update the zone total live
-            const tot=zr.querySelector(".rows-total"); const z=findZone(f.id,zid);
+            const z=findZone(f.id,zid);
+            // 1. zone's rows-total line ("8 行 · 共 36 棵")
+            const tot=zr.querySelector(".rows-total");
             if(tot) tot.textContent=S.rowsTotal(alive(z.rows).length, zoneTotalTrees(z));
+            // 2. zone's collapsed summary line ("A · 8 行 · N 棵")
+            const zsum=zr.querySelector(".zone-sum");
+            if(zsum){ const zt=zoneTotalTrees(z);
+              zsum.textContent = z.hasRows ? S.zoneSummaryRows(alive(z.rows).length, zt) : (zt>0?S.treesCount(zt):S.zoneNoTrees); }
+            // 3. farm-level total ("12 个区域 · 共 N 棵")
+            const farmCard=zr.closest(".farm-card");
+            const ztg=farmCard&&farmCard.querySelector(".ztg-label");
+            if(ztg) ztg.textContent=S.zonesCount(alive(f.zones).length, farmTotalTrees(f));
           };
           rf.oninput=onRowTrees; rt.oninput=onRowTrees;
         });
