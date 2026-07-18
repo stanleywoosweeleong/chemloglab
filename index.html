@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#137a4a">
 <meta name="description" content="Bilingual agrochemical tank-mix calculator and spray-application logger. Works offline.">
-<title>农药记录 · ChemLogger</title>
+<title>农药记录管理 · ChemLog Lab</title>
 
 <!-- PWA manifest -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -19,15 +19,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="ChemLogger">
+<meta name="apple-mobile-web-app-title" content="ChemLog Lab">
 <style>
 :root{
   --bg:#f4f6f2; --panel:#ffffff; --panel2:#eef2ea; --line:#c9d4c6;
-  --ink:#122117; --dim:#4a6152; --dim2:#6b8072;
+  --ink:#122117; --dim:#3f5748; --dim2:#556a5c;
   --accent:#137a4a; --accent-ink:#ffffff; --amber:#9a6b00; --red:#b3261e;
   --r:14px; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+input::placeholder,textarea::placeholder{color:var(--dim2);opacity:1;font-weight:500}
 html,body{margin:0}
 body{
   background:var(--bg); color:var(--ink);
@@ -44,9 +45,11 @@ header{
 .brand{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
 .brand h1{font-size:19px;margin:0;letter-spacing:.2px;font-weight:650}
 .lang{
+  display:inline-flex;align-items:center;gap:5px;
   border:1px solid var(--line);background:var(--panel);color:var(--dim);
-  border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;cursor:pointer;
+  border-radius:999px;padding:6px 12px;font-size:13px;font-weight:650;cursor:pointer;
 }
+.lang-globe{flex:none;opacity:.85}
 .lang:active{transform:scale(.96)}
 .hbtns{display:flex;align-items:center;gap:8px}
 .icon-btn{border:1px solid var(--line);background:var(--panel);color:var(--dim);
@@ -64,8 +67,8 @@ header{
 .panel-head h2{margin:0;font-size:18px;font-weight:650;flex:1}
 .panel-body{max-width:680px;margin:0 auto;padding:16px}
 .setting-sec{margin-bottom:26px}
-.sec-h{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1.4px;
-  font-weight:700;margin-bottom:10px}
+.sec-h{font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;
+  font-weight:750;margin-bottom:10px}
 .add-row{display:flex;gap:8px;margin-bottom:10px}
 .ent-add{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--ink);
   border-radius:11px;padding:13px 13px;font-size:16px}
@@ -82,14 +85,14 @@ header{
 .ent-del{flex:none;border:1px solid var(--line);background:transparent;color:var(--dim);
   width:42px;height:42px;border-radius:10px;font-size:16px;cursor:pointer}
 .ent-del:active{background:var(--panel2)}
-.ent-empty{color:var(--dim2);font-size:13px;padding:6px 2px}
+.ent-empty{color:var(--dim2);font-size:13px;font-weight:500;padding:6px 2px}
 /* worker sid + name + import */
 .import-btn{border:1px solid var(--accent);background:transparent;color:var(--accent);
   border-radius:8px;padding:6px 12px;font-size:12px;font-weight:650;cursor:pointer;text-transform:none;letter-spacing:0}
 .import-btn:active{background:rgba(19,122,74,.08)}
 .import-hint{font-size:12px;margin:2px 2px 8px;min-height:15px;line-height:1.4}
 .import-hint.ok{color:var(--accent)}.import-hint.err{color:var(--red)}
-.import-fmt{font-size:11px;color:var(--dim2);margin:0 2px 8px;line-height:1.4}
+.import-fmt{font-size:12px;color:var(--dim2);margin:0 2px 8px;line-height:1.4}
 .worker-add{display:flex;gap:8px;margin-bottom:4px}
 .w-sid{width:6.5em;min-width:6.5em;flex:none;background:var(--panel);border:1px solid var(--line);color:var(--ink);
   border-radius:11px;padding:13px 12px;font-size:16px;font-family:var(--mono);text-align:center;text-transform:uppercase}
@@ -97,6 +100,79 @@ header{
 .w-sid.dupe{border-color:var(--red);background:rgba(179,38,30,.06)}
 .worker-row{gap:8px;padding-left:4px}
 .worker-row .w-sid{border-radius:8px;padding:11px 8px}
+
+/* chemical price section */
+.cost-hint{font-size:13px;color:var(--dim2);margin:2px 2px 8px;line-height:1.4}
+.chem-add{display:flex;gap:8px;margin-bottom:4px;align-items:center}
+.cp-name{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:11px;padding:12px 12px;font-size:15px}
+.cp-price{width:6.5em;flex:none;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:11px;padding:12px 8px;font-size:16px;font-family:var(--mono);text-align:right}
+.cp-name:focus,.cp-price:focus{outline:none;border-color:var(--accent)}
+.cp-name.dupe{border-color:var(--red);background:rgba(179,38,30,.06)}
+.cp-row{gap:8px;padding-left:4px;align-items:center}
+.cp-row .cp-name{border-radius:8px;padding:10px 10px;font-weight:600}
+.cp-row .cp-price{border-radius:8px;padding:10px 8px}
+.cp-cur{font-size:13px;color:var(--dim);font-weight:600;flex:none}
+.dose-unit-seg{flex:none;border:1px solid var(--line);background:var(--panel2);color:var(--accent);
+  border-radius:8px;padding:10px 8px;font-size:13px;font-weight:650;font-family:var(--mono);cursor:pointer;min-width:2.8em}
+.dose-unit-seg:active{transform:scale(.96)}
+.cl-adjust{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;
+  padding-top:8px;border-top:1px dashed var(--line)}
+.ca-lab{font-size:14px;color:var(--ink);font-weight:600}
+.ca-input{display:flex;align-items:center;gap:5px}
+.ca-rm{font-size:13px;color:var(--dim2);font-weight:600}
+.ca-field{width:5.5em;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:8px;padding:9px 10px;font-size:16px;font-family:var(--mono);text-align:right}
+.ca-field:focus{outline:none;border-color:var(--accent)}
+
+/* cost report */
+#costBody{padding:12px 14px 40px}
+.cost-empty{text-align:center;color:var(--dim2);font-size:14px;padding:40px 20px;line-height:1.5}
+.cost-grand{display:flex;justify-content:space-between;align-items:center;background:var(--accent);color:#fff;
+  border-radius:12px;padding:14px 16px;margin-bottom:14px;font-size:15px;font-weight:650}
+.cost-grand .cg-amt{font-family:var(--mono);font-size:18px;font-weight:700}
+.cost-month{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.cost-mhead{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;
+  background:var(--panel2);border-bottom:1px solid var(--line)}
+.cm-name{font-size:15px;font-weight:700;color:var(--ink)}
+.cm-amt{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--accent)}
+.cost-log{padding:11px 14px;border-bottom:1px solid var(--line)}
+.cost-log:last-child{border-bottom:none}
+.cl-head{display:flex;align-items:center;gap:10px}
+.cl-when{flex:1;min-width:0;font-size:13px;color:var(--dim2);font-weight:500}
+.cl-total{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--ink)}
+.cl-del{border:none;background:transparent;cursor:pointer;font-size:16px;padding:2px 2px 2px 4px}
+.cl-items{margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.cl-item{display:flex;align-items:baseline;gap:8px;font-size:14px}
+.ci-name{flex:none;color:var(--ink);font-weight:650}
+.ci-qty{flex:1;min-width:0;color:var(--dim2);font-size:12px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci-amt{flex:none;font-family:var(--mono);color:var(--ink);font-weight:650}
+.cl-chems-min{font-size:13px;color:var(--dim);margin-top:3px}
+.cl-trash-btns{display:flex;gap:8px;margin-top:8px;justify-content:flex-end}
+
+/* user guide */
+.guide-intro{font-size:15px;color:var(--dim);line-height:1.55;margin:2px 2px 16px;font-weight:500}
+.guide-sec{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.guide-h{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.guide-ico{font-size:20px;flex:none;line-height:1}
+.guide-t{font-size:15px;font-weight:700;color:var(--ink)}
+.guide-steps{display:flex;flex-direction:column;gap:7px}
+.guide-step{font-size:14px;color:var(--ink);line-height:1.5;padding-left:14px;position:relative}
+.guide-step::before{content:"·";position:absolute;left:3px;top:-1px;color:var(--accent);font-weight:800;font-size:16px}
+.guide-foot{font-size:13px;color:var(--dim2);text-align:center;margin:18px 2px 8px;line-height:1.5}
+.guide-qr{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 16px;margin:6px 0 4px;text-align:center}
+.guide-qr-h{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:14px}
+.guide-qr-img{display:inline-flex;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.guide-qr-img svg{display:block}
+.guide-qr-sub{font-size:13px;color:var(--dim);line-height:1.5;margin:14px auto 12px;max-width:300px}
+.guide-qr-link{display:inline-block;font-size:13px;font-family:var(--mono);color:var(--accent);word-break:break-all;text-decoration:none;font-weight:600}
+.guide-qr-link:active{opacity:.6}
+.cost-trash-h{font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin:18px 2px 8px}
+.cost-log.trashed{opacity:.7;background:var(--panel2);border-radius:10px;border:1px dashed var(--line);margin-bottom:6px}
+.cl-restore{border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:7px;padding:5px 10px;font-size:12px;font-weight:650;cursor:pointer}
+.cl-purge{border:1px solid var(--red);background:transparent;color:var(--red);border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:13px}
+
 /* trash */
 .trash-h{display:flex;align-items:center;justify-content:space-between}
 .trash-purgeall{border:1px solid var(--red);background:transparent;color:var(--red);
@@ -139,7 +215,7 @@ header{
 .zone-name{width:100%;background:transparent;border:none;color:var(--ink);font-size:16px;font-weight:600;padding:2px 0}
 .zone-name:focus{outline:none;border-bottom:1px solid var(--accent)}
 .zone-idblock{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.zone-sum{font-size:12px;color:var(--dim2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zone-sum{font-size:12.5px;color:var(--dim2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .zone-detail{margin-top:2px}
 .zone-del{flex:none;border:1px solid var(--line);background:transparent;color:var(--dim2);
   width:42px;height:42px;border-radius:10px;font-size:16px;cursor:pointer}
@@ -184,7 +260,7 @@ header{
   border-radius:10px;padding:0 16px;font-size:14px;font-weight:650;cursor:pointer;min-height:46px}
 .row-gen-hint{font-size:12px;margin:5px 2px 0;min-height:15px;line-height:1.3}
 .row-gen-hint.ok{color:var(--accent)}.row-gen-hint.err{color:var(--red)}
-.zone-empty{color:var(--dim2);font-size:13px;padding:6px 0 7px}
+.zone-empty{color:var(--dim2);font-size:13px;font-weight:500;padding:6px 0 7px}
 .zone-add-row{display:flex;gap:8px;margin-top:6px}
 .zone-add{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
   border-radius:10px;padding:12px 12px;font-size:15px}
@@ -219,7 +295,7 @@ header{
 .section-head{display:flex;align-items:center;justify-content:space-between;margin:22px 0 10px}
 .section-head:first-of-type{margin-top:6px}
 .section-head h2{font-size:15px;margin:0;font-weight:650}
-.count{color:var(--dim);font-size:12px;font-family:var(--mono)}
+.count{color:var(--dim);font-size:13px;font-weight:600;font-family:var(--mono)}
 .chem{
   background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
   padding:13px;margin-bottom:10px;box-shadow:0 1px 2px rgba(18,33,23,.05);
@@ -240,7 +316,7 @@ header{
 .pack-lab{font-size:13px;color:var(--dim);font-weight:600;flex:none}
 .pack-in{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
   border-radius:10px;padding:9px 12px;font-size:14px;font-family:var(--mono)}
-.pack-in::placeholder{color:var(--dim2);font-weight:400;font-family:-apple-system,system-ui,sans-serif;font-size:12px}
+.pack-in::placeholder{color:var(--dim2);font-weight:500;font-family:-apple-system,system-ui,sans-serif;font-size:13px}
 .pack-in:focus{outline:none;border-color:var(--accent)}
 .result .packs{display:block;text-align:right;font-size:14px;color:var(--ink);margin-top:5px;font-weight:600}
 .result .packs b{color:var(--accent);font-family:var(--mono);font-size:16px}
@@ -297,12 +373,12 @@ header{
   display:flex;align-items:baseline;justify-content:space-between;gap:10px;
   border:1px dashed var(--line);
 }
-.result .lab{font-size:12px;color:var(--dim)}
+.result .lab{font-size:13px;color:var(--dim);font-weight:600}
 .result .val{font-size:27px;font-weight:800;font-family:var(--mono);color:var(--accent);line-height:1}
 .result .val small{font-size:15px;font-weight:700}
 .result .val.warn{color:var(--amber)}
 .result .val.bad{color:var(--red)}
-.result .sub{font-size:11px;color:var(--dim2);display:block;text-align:right;font-family:var(--mono);margin-top:4px}
+.result .sub{font-size:12px;color:var(--dim2);display:block;text-align:right;font-family:var(--mono);margin-top:4px}
 
 .add{
   width:100%;border:1px dashed var(--line);background:transparent;color:var(--accent);
@@ -385,7 +461,7 @@ header{
 .log-in{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
   border-radius:11px;padding:13px 12px;font-size:16px}
 .log-in:focus{outline:none;border-color:var(--accent)}
-.log-empty{color:var(--dim2);font-size:13px;padding:5px 2px}
+.log-empty{color:var(--dim2);font-size:13px;font-weight:500;padding:5px 2px}
 .log-addtarget{width:100%;border:1px dashed var(--accent);background:transparent;color:var(--accent);
   border-radius:11px;padding:12px;font-size:14px;font-weight:650;cursor:pointer;margin-top:8px}
 .log-addtarget:active{background:rgba(19,122,74,.06)}
@@ -437,7 +513,7 @@ header{
 .tp-into{flex:none;width:52px;text-align:center;font-size:20px;font-weight:700;color:var(--dim);
   display:flex;align-items:center;justify-content:center}
 .tp-scope{font-size:14px;font-weight:650;color:var(--ink);margin:2px 2px 10px}
-.tp-hint{font-size:12px;color:var(--dim2);margin:8px 2px 4px}
+.tp-hint{font-size:13px;color:var(--dim2);margin:8px 2px 4px}
 .tp-multi.on{border-color:var(--accent);background:rgba(19,122,74,.08);color:var(--accent);font-weight:650}
 .tp-mslist{max-height:44vh;overflow-y:auto}
 .tp-donebar{position:sticky;bottom:0;display:flex;align-items:center;gap:9px;
@@ -465,7 +541,7 @@ header{
 .hist-when{font-size:15px;font-weight:700;color:var(--ink);font-family:var(--mono)}
 .hist-del{flex:none;border:1px solid var(--line);background:transparent;color:var(--dim2);width:38px;height:38px;border-radius:9px;font-size:15px;cursor:pointer}
 .hist-sec{font-size:14px;color:var(--ink);line-height:1.5;padding:4px 0;border-top:1px solid var(--line)}
-.hist-k{display:inline-block;font-size:12px;font-weight:700;color:var(--dim);margin-right:4px}
+.hist-k{display:inline-block;font-size:13px;font-weight:700;color:var(--dim);margin-right:4px}
 .hist-sec .dim{color:var(--dim2)}
 .hist-export{text-transform:none;letter-spacing:0}
 
@@ -481,13 +557,16 @@ header{
 <header>
   <div class="hrow">
     <div class="brand">
-      <h1 id="t-title">农药记录</h1>
+      <h1 id="t-title">农药记录管理</h1>
     </div>
     <div class="hbtns">
+      <button class="icon-btn" id="guideBtn" title="User guide" aria-label="User guide">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+      </button>
       <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
-      <button class="lang" id="langBtn">EN</button>
+      <button class="lang" id="langBtn" aria-label="切换语言 / Switch language"><svg class="lang-globe" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span id="langLabel">中文</span></button>
     </div>
   </div>
 </header>
@@ -564,12 +643,65 @@ header{
     </div>
     <div class="setting-sec">
       <div class="sec-h trash-h">
+        <span id="t-chemProdH">药剂价格</span>
+        <button class="import-btn" id="costReportBtn"></button>
+      </div>
+      <div class="cost-hint" id="chemProdHint"></div>
+      <div class="chem-add">
+        <input class="cp-name" id="chemProdName" type="text" name="cpName" placeholder="" aria-label="Chemical name">
+        <span class="cp-cur">RM</span>
+        <input class="cp-price" id="chemProdPrice" inputmode="decimal" type="text" name="cpPrice" placeholder="" aria-label="Price per pack">
+        <button class="ent-addbtn" id="chemProdAddBtn">＋</button>
+      </div>
+      <div class="import-fmt" id="chemProdFmt"></div>
+      <div class="ent-list" id="chemProdList"></div>
+    </div>
+    <div class="setting-sec">
+      <div class="sec-h trash-h">
+        <span id="t-chemDoseH">点治药剂（按用量）</span>
+      </div>
+      <div class="cost-hint" id="chemDoseHint"></div>
+      <div class="chem-add">
+        <input class="cp-name" id="chemDoseName" type="text" name="cdName" placeholder="" aria-label="Chemical name">
+        <span class="cp-cur">RM</span>
+        <input class="cp-price" id="chemDosePrice" inputmode="decimal" type="text" name="cdPrice" placeholder="" aria-label="Price per unit">
+        <button class="dose-unit-seg" id="chemDoseUnitBtn" type="button" aria-label="unit">/ml</button>
+        <button class="ent-addbtn" id="chemDoseAddBtn">＋</button>
+      </div>
+      <div class="import-fmt" id="chemDoseFmt"></div>
+      <div class="ent-list" id="chemDoseList"></div>
+    </div>
+    <div class="setting-sec">
+      <div class="sec-h trash-h">
         <span id="t-trashH">回收站</span>
         <button class="trash-purgeall" id="trashPurgeAll" hidden></button>
       </div>
       <div class="ent-list" id="trashList"></div>
     </div>
   </div>
+</div>
+
+<!-- Cost report full-screen panel -->
+<div class="panel" id="costPanel" hidden>
+  <div class="panel-head">
+    <button class="icon-btn" id="costBack" aria-label="Back">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h2 id="t-costTitle">药剂成本</h2>
+    <button class="import-btn hist-export" id="costExport"></button>
+  </div>
+  <div class="panel-body" id="costBody"></div>
+</div>
+
+<!-- User guide full-screen panel -->
+<div class="panel" id="guidePanel" hidden>
+  <div class="panel-head">
+    <button class="icon-btn" id="guideBack" aria-label="Back">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h2 id="t-guideTitle">使用指南</h2>
+  </div>
+  <div class="panel-body" id="guideBody"></div>
 </div>
 
 <!-- Log spray event bottom sheet -->
@@ -637,7 +769,9 @@ header{
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 
 const STR={
-  zh:{title:"农药记录",tank:"水箱容量",
+  zh:{title:"农药记录管理",tank:"水箱容量",
+    guideTitle:"使用指南",guideIntro:"这套 App 界面简洁，但功能齐全。以下是各功能的简单说明。",guideFoot:"随时点右上角 (i) 重看本指南。",
+    guideShareTitle:"分享这个 App",guideShareSub:"用手机相机扫描二维码，即可打开本 App（可「添加到主屏幕」当作 App 使用）。",
     chems:"药剂",add:"添加药剂",recipe:"配方总览",share:"WhatsApp",reset:"清空",
     custom:"自定",name:"药剂名称（可选）",
     mPer:"每升水",mPerShort:"/ L",mRatio:"稀释比",perA:"/",perB:"L",mRate:"用量",perWord:"兑",
@@ -674,7 +808,7 @@ const STR={
     hasRows:"分行",noRows:"尚未添加行",rowPh:"输入行名称，例: C2",rowGenPh:n=>`输入名称或范围，例: ${n||"C"}1、${n||"C"}1-${n||"C"}20`,
     rowsTotal:(r,t)=>`${r} 行 · 共 ${t} 棵`,
     zoneSummaryRows:(r,t)=>`${r} 行 · ${t} 棵`,zoneNoTrees:"未设树数",
-    lang:"EN",
+    lang:"中文",
     logBtnHome:"记录喷洒",historyBtnHome:"记录",
     logTitle:"记录喷洒",logWhen:"日期与时间",logTargets:"喷洒位置",logWorkers:"工人",logMix:"配方（快照）",
     logAddTarget:"添加位置",logSave:"保存记录",logSaved:"已保存",logNeedTarget:"请至少添加一个位置",
@@ -692,8 +826,17 @@ const STR={
     wkSearchPh:"搜索工号或姓名…",wkNoneSelected:"尚未选择工人",wkNoMatch:"无匹配工人",wkMore:n=>`还有 ${n} 位，请细化搜索`,
     historyTitle:"喷洒记录",historyEmpty:"尚无记录",exportExcel:"导出 Excel",exportedCsv:"已导出 CSV",
     histTargets:"位置：",histWorkers:"工人：",histMix:"配方：",histNoWorker:"（未指定）",histDelConfirm:"删除此记录？",
-    xlWhen:"日期时间",xlFarm:"农场",xlZone:"区域",xlRow:"行",xlTrees:"树",xlWorkers:"工人",xlChem:"药剂",xlPack:"包装",xlAmount:"用量",xlPacks:"包/瓶",xlTank:"水箱"},
-  en:{title:"ChemLogger",tank:"Tank Volume",
+    xlWhen:"日期时间",xlFarm:"农场",xlZone:"区域",xlRow:"行",xlTrees:"树",xlWorkers:"工人",xlChem:"药剂",xlPack:"包装",xlAmount:"用量",xlPacks:"包/瓶",xlTank:"水箱",
+    chemProdH:"药剂价格",costReport:"成本报告",chemProdHint:"添加已购买的药剂与每包/瓶价格（记录喷洒时会自动计算成本）",
+    cpNamePh:"药剂名称",cpPackPh:"包装",cpPricePh:"价格",cpFmt:"价格可随时修改（RM/每包或每瓶）",cpEmpty:"尚未添加药剂价格",
+    chemDoseH:"点治药剂（按用量）",chemDoseHint:"少量使用的药剂（如点治病树、增效剂），按每 ml 或每 g 计价。若与配方药剂同名，将优先按用量计算成本。",
+    cdPricePh:"单价",cdFmt:"点一下 /ml 可切换 /g（RM 每单位）",cdEmpty:"尚未添加点治药剂",costAdjustLabel:"人工调整",
+    costTitle:"药剂成本",costEmpty:"暂无成本记录（记录喷洒时，若药剂已设定价格，会自动计算）",
+    costGrand:"总计",costMonthTotal:"月合计",costTrash:"已删除记录",costDelConfirm:"删除这笔成本记录？可在下方恢复。",
+    xlMonth:"月份",costCol:"成本 (RM)",costUnitPrice:"单价 (RM/包)"},
+  en:{title:"ChemLog Lab",tank:"Tank Volume",
+    guideTitle:"User guide",guideIntro:"This app has a clean look but is rich in what it can do. Here's a quick tour of each feature.",guideFoot:"Tap the (i) at the top right anytime to see this guide again.",
+    guideShareTitle:"Share this app",guideShareSub:"Point your phone camera at the QR code to open the app (then Add to Home Screen to use it like an app).",
     chems:"Chemicals",add:"Add chemical",recipe:"Mix summary",share:"WhatsApp",reset:"Reset",
     custom:"Custom",name:"Product name (optional)",
     mPer:"Per litre",mPerShort:"/ L",mRatio:"Ratio",perA:"/",perB:"L",mRate:"Rate",perWord:"per",
@@ -730,7 +873,7 @@ const STR={
     hasRows:"Rows",noRows:"No rows yet",rowPh:"Enter row name, e.g. C2",rowGenPh:n=>`Name or range, e.g. ${n||"C"}1, ${n||"C"}1-${n||"C"}20`,
     rowsTotal:(r,t)=>`${r} row${r!==1?"s":""} · ${t} trees`,
     zoneSummaryRows:(r,t)=>`${r} row${r!==1?"s":""} · ${t} trees`,zoneNoTrees:"no trees set",
-    lang:"中",
+    lang:"EN",
     logBtnHome:"Log spraying",historyBtnHome:"Logs",
     logTitle:"Log spraying",logWhen:"Date & time",logTargets:"Where sprayed",logWorkers:"Workers",logMix:"Mix (snapshot)",
     logAddTarget:"Add location",logSave:"Save log",logSaved:"Saved",logNeedTarget:"Add at least one location",
@@ -748,7 +891,14 @@ const STR={
     wkSearchPh:"Search staff ID or name…",wkNoneSelected:"No workers selected",wkNoMatch:"No matching worker",wkMore:n=>`${n} more — refine your search`,
     historyTitle:"Spray logs",historyEmpty:"No logs yet",exportExcel:"Export Excel",exportedCsv:"Exported CSV",
     histTargets:"Where: ",histWorkers:"Workers: ",histMix:"Mix: ",histNoWorker:"(none)",histDelConfirm:"Delete this log?",
-    xlWhen:"Date/Time",xlFarm:"Farm",xlZone:"Zone",xlRow:"Row",xlTrees:"Trees",xlWorkers:"Workers",xlChem:"Chemical",xlPack:"Pack",xlAmount:"Amount",xlPacks:"Packs",xlTank:"Tank"}
+    xlWhen:"Date/Time",xlFarm:"Farm",xlZone:"Zone",xlRow:"Row",xlTrees:"Trees",xlWorkers:"Workers",xlChem:"Chemical",xlPack:"Pack",xlAmount:"Amount",xlPacks:"Packs",xlTank:"Tank",
+    chemProdH:"Chemical price",costReport:"Cost report",chemProdHint:"Add chemicals you've bought and the price per pack (cost is auto-computed when you log spraying).",
+    cpNamePh:"Chemical name",cpPackPh:"Pack",cpPricePh:"Price",cpFmt:"Price is editable anytime (RM per bag or bottle).",cpEmpty:"No chemical prices yet",
+    chemDoseH:"Spot-dose chemicals (by amount)",chemDoseHint:"Chemicals used in small amounts (spot-treating a sick tree, adjuvants), priced per ml or per g. If a mix chemical matches by name, cost is computed by amount used first.",
+    cdPricePh:"Price",cdFmt:"Tap /ml to switch to /g (RM per unit).",cdEmpty:"No spot-dose chemicals yet",costAdjustLabel:"Manual adjust",
+    costTitle:"Chemical cost",costEmpty:"No cost records yet (logged sprays with a priced chemical appear here).",
+    costGrand:"Total",costMonthTotal:"Month total",costTrash:"Deleted records",costDelConfirm:"Delete this cost record? You can restore it below.",
+    xlMonth:"Month",costCol:"Cost (RM)",costUnitPrice:"Unit price (RM/pack)"}
 };
 let lang = localStorage.getItem("tm_lang")||"zh";
 
@@ -786,7 +936,12 @@ function loadLists(){
     hasRows:!!z.hasRows,
     rows:arr(z.rows).filter(r=>r&&typeof r==="object").map(r=>({id:r.id||newId(), name:r.name||"", deleted:r.deleted||undefined, tFrom:(r.tFrom!=null&&r.tFrom!==""?r.tFrom:"1"), tTo:(r.tTo!=null?r.tTo:"")}))
   })) }));
-  return { farms, workers:arr(d.workers).filter(w=>w&&typeof w==="object").map(w=>({id:w.id||newId(), sid:w.sid||"", name:w.name||"", deleted:w.deleted||undefined})) };
+  return {
+    farms,
+    workers:arr(d.workers).filter(w=>w&&typeof w==="object").map(w=>({id:w.id||newId(), sid:w.sid||"", name:w.name||"", deleted:w.deleted||undefined})),
+    chemProducts:arr(d.chemProducts).filter(c=>c&&typeof c==="object").map(c=>({id:c.id||newId(), name:c.name||"", pack:c.pack||"", price:(c.price!=null?String(c.price):""), deleted:c.deleted||undefined})),
+    chemDoses:arr(d.chemDoses).filter(c=>c&&typeof c==="object").map(c=>({id:c.id||newId(), name:c.name||"", unit:(c.unit==="g"?"g":"ml"), price:(c.price!=null?String(c.price):""), deleted:c.deleted||undefined}))
+  };
 }
 function newId(){ return "id_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 let lists = loadLists();
@@ -800,6 +955,8 @@ function saveLogs(){ localStorage.setItem("tm_logs", JSON.stringify(logs)); }
 function logAdd(rec){ rec.id=newId(); rec.ts=nowTs(); logs.push(rec); saveLogs(); return rec; }
 function logRemove(id){ const r=logs.find(x=>x.id===id); if(r){ r.deleted=nowTs(); saveLogs(); } }
 function logRestore(id){ const r=logs.find(x=>x.id===id); if(r){ delete r.deleted; saveLogs(); } }
+function logPurge(id){ const i=logs.findIndex(x=>x.id===id); if(i>=0){ logs.splice(i,1); saveLogs(); } }
+function deletedLogs(){ return logs.filter(x=>x.deleted).slice().sort((a,b)=> (b.when||"").localeCompare(a.when||"")); }
 function aliveLogs(){ return logs.filter(x=>!x.deleted).slice().sort((a,b)=> (b.when||"").localeCompare(a.when||"") || b.ts-a.ts); }
 
 // soft-delete helpers: items carry a `deleted` timestamp; alive() filters them out
@@ -971,6 +1128,53 @@ function workersBulkImport(rows){
   });
   if(added) saveLists();
   return {added, skipped};
+}
+
+// --- chemical products (purchased chemicals with a price per pack) ---
+function chemProductAdd(name, pack, price){
+  const nm=(name||"").trim();
+  if(!nm) return null;
+  const c={id:newId(), name:nm, pack:(pack||"").trim(), price:(price!=null?String(price).replace(/[^\d.]/g,""):"")};
+  lists.chemProducts.push(c); saveLists(); return c;
+}
+function chemProductSet(id, field, value){
+  const c=lists.chemProducts.find(x=>x.id===id); if(!c) return;
+  if(field==="price") value=String(value).replace(/[^\d.]/g,"");
+  c[field]=(field==="name"||field==="pack")?String(value).trim():value;
+  saveLists();
+}
+function chemProductRemove(id){ const c=lists.chemProducts.find(x=>x.id===id); if(c){ c.deleted=nowTs(); saveLists(); } }
+// find an active saved chemical by name (case-insensitive) -> its price per pack, or null
+function chemPriceByName(name){
+  const nm=(name||"").trim().toLowerCase(); if(!nm) return null;
+  const c=alive(lists.chemProducts).find(x=>(x.name||"").trim().toLowerCase()===nm);
+  if(!c) return null;
+  const price=parseFloat(c.price);
+  return price>0 ? price : null;
+}
+
+// --- spot / small-dose chemicals (priced per ml or per g of product used) ---
+function chemDoseAdd(name, unit, price){
+  const nm=(name||"").trim();
+  if(!nm) return null;
+  const c={id:newId(), name:nm, unit:(unit==="g"?"g":"ml"), price:(price!=null?String(price).replace(/[^\d.]/g,""):"")};
+  lists.chemDoses.push(c); saveLists(); return c;
+}
+function chemDoseSet(id, field, value){
+  const c=lists.chemDoses.find(x=>x.id===id); if(!c) return;
+  if(field==="price") value=String(value).replace(/[^\d.]/g,"");
+  if(field==="unit") value=(value==="g"?"g":"ml");
+  c[field]=(field==="name")?String(value).trim():value;
+  saveLists();
+}
+function chemDoseRemove(id){ const c=lists.chemDoses.find(x=>x.id===id); if(c){ c.deleted=nowTs(); saveLists(); } }
+// find an active dose-priced chemical by name -> {unit, price} or null
+function chemDoseByName(name){
+  const nm=(name||"").trim().toLowerCase(); if(!nm) return null;
+  const c=alive(lists.chemDoses).find(x=>(x.name||"").trim().toLowerCase()===nm);
+  if(!c) return null;
+  const price=parseFloat(c.price);
+  return price>0 ? {unit:c.unit, price} : null;
 }
 
 // --- trash: collect, restore, purge (across farms/zones/rows/workers) ---
@@ -1267,7 +1471,7 @@ function renderText(){
   $("#t-title").textContent=S.title;
   $("#t-tank").textContent=S.tank; $("#customVol").setAttribute("aria-label", S.tank); $("#t-chems").textContent=S.chems;
   $("#t-add").textContent=S.add; $("#t-recipe").textContent=S.recipe;
-  $("#langBtn").textContent=S.lang;
+  $("#langLabel").textContent=S.lang;
   $("#t-share").textContent=S.share; $("#resetBtn").textContent=S.reset;
   $("#t-logBtn").textContent=S.logBtnHome; $("#t-historyBtn").textContent=S.historyBtnHome;
 }
@@ -1285,6 +1489,8 @@ $("#resetBtn").onclick=()=>{ state={tank:"",chems:[blankChem()]}; save(); render
 
 // --- settings panel ---
 $("#settingsBtn").onclick=()=>{ $("#settingsPanel").hidden=false; renderSettings(); };
+$("#guideBtn").onclick=()=>{ $("#guidePanel").hidden=false; renderGuide(); };
+$("#guideBack").onclick=()=>{ $("#guidePanel").hidden=true; };
 $("#settingsBack").onclick=()=>{ $("#settingsPanel").hidden=true; };
 $("#farmAddBtn").onclick=()=>{ const inp=$("#farmAdd"); farmAdd(inp.value); inp.value=""; inp.focus(); renderFarmList(); };
 $("#farmAdd").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#farmAddBtn").click(); });
@@ -1298,6 +1504,33 @@ $("#workerAdd").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#workerAd
 $("#workerAddSid").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#workerAdd").focus(); });
 $("#workerAddSid").addEventListener("input",e=>{ const p=e.target.selectionStart; e.target.value=e.target.value.toUpperCase(); e.target.setSelectionRange(p,p); });
 $("#trashPurgeAll").onclick=async()=>{ if(await askConfirm(STR[lang].purgeAllConfirm, {yes:STR[lang].purgeYes})){ trashPurgeAll(); renderSettings(); } };
+
+// --- chemical price add ---
+$("#chemProdAddBtn").onclick=()=>{
+  const nI=$("#chemProdName"), prI=$("#chemProdPrice");
+  if(!(nI.value||"").trim()){ nI.classList.add("dupe"); setTimeout(()=>nI.classList.remove("dupe"),1000); nI.focus(); return; }
+  chemProductAdd(nI.value, "", prI.value);
+  nI.value=""; prI.value=""; nI.focus(); renderChemProdList();
+};
+$("#chemProdPrice").addEventListener("input",e=>{ const cl=e.target.value.replace(/[^\d.]/g,""); if(cl!==e.target.value){const p=e.target.selectionStart;e.target.value=cl;e.target.setSelectionRange(p,p);} });
+$("#chemProdName").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#chemProdPrice").focus(); });
+$("#chemProdPrice").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#chemProdAddBtn").click(); });
+// spot/dose chemical add (unit toggle ml <-> g)
+let chemDoseUnit="ml";
+$("#chemDoseUnitBtn").onclick=()=>{ chemDoseUnit = chemDoseUnit==="ml"?"g":"ml"; $("#chemDoseUnitBtn").textContent="/"+chemDoseUnit; };
+$("#chemDoseAddBtn").onclick=()=>{
+  const nI=$("#chemDoseName"), prI=$("#chemDosePrice");
+  if(!(nI.value||"").trim()){ nI.classList.add("dupe"); setTimeout(()=>nI.classList.remove("dupe"),1000); nI.focus(); return; }
+  chemDoseAdd(nI.value, chemDoseUnit, prI.value);
+  nI.value=""; prI.value=""; nI.focus(); renderChemDoseList();
+};
+$("#chemDosePrice").addEventListener("input",e=>{ const cl=e.target.value.replace(/[^\d.]/g,""); if(cl!==e.target.value){const p=e.target.selectionStart;e.target.value=cl;e.target.setSelectionRange(p,p);} });
+$("#chemDoseName").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#chemDosePrice").focus(); });
+$("#chemDosePrice").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#chemDoseAddBtn").click(); });
+$("#costReportBtn").onclick=()=>{ $("#costPanel").hidden=false; renderCostReport(); };
+$("#costBack").onclick=()=>{ $("#costPanel").hidden=true; };
+$("#costExport").onclick=()=>exportCostExcel();
+
 
 // --- worker Excel/CSV import ---
 $("#workerImport").onclick=()=>$("#workerFile").click();
@@ -1376,9 +1609,66 @@ function renderSettings(){
   $("#workerAddSid").placeholder=S.sidPh; $("#workerAddSid").setAttribute("aria-label", S.sidPh);
   $("#workerImport").textContent=S.importBtn;
   $("#workerFmt").textContent=S.importFmt;
+  // chemical price section
+  $("#t-chemProdH").textContent=S.chemProdH;
+  $("#costReportBtn").textContent=S.costReport;
+  $("#chemProdHint").textContent=S.chemProdHint;
+  $("#chemProdName").placeholder=S.cpNamePh; $("#chemProdName").setAttribute("aria-label", S.cpNamePh);
+  $("#chemProdPrice").placeholder=S.cpPricePh; $("#chemProdPrice").setAttribute("aria-label", S.cpPricePh);
+  $("#chemProdFmt").textContent=S.cpFmt;
+  // spot/dose chemical section
+  $("#t-chemDoseH").textContent=S.chemDoseH;
+  $("#chemDoseHint").textContent=S.chemDoseHint;
+  $("#chemDoseName").placeholder=S.cpNamePh; $("#chemDoseName").setAttribute("aria-label", S.cpNamePh);
+  $("#chemDosePrice").placeholder=S.cdPricePh; $("#chemDosePrice").setAttribute("aria-label", S.cdPricePh);
+  $("#chemDoseFmt").textContent=S.cdFmt;
   renderFarmList();
   renderWorkerList();
+  renderChemProdList();
+  renderChemDoseList();
   renderTrash();
+}
+function renderChemProdList(){
+  const S=STR[lang], host=$("#chemProdList"); host.innerHTML="";
+  const items=alive(lists.chemProducts).slice().sort((a,b)=>natCmp(a.name,b.name));
+  if(!items.length){
+    const e=document.createElement("div"); e.className="ent-empty"; e.textContent=S.cpEmpty; host.appendChild(e); return;
+  }
+  items.forEach(c=>{
+    const row=document.createElement("div"); row.className="ent-row cp-row";
+    row.innerHTML=`<input class="cp-name" name="cpName" value="${esc(c.name)}" aria-label="${S.cpNamePh}">
+                   <span class="cp-cur">RM</span>
+                   <input class="cp-price" name="cpPrice" inputmode="decimal" value="${esc(c.price)}" placeholder="0.00" aria-label="${S.cpPricePh}">
+                   <button class="ent-del" aria-label="delete">🗑</button>`;
+    row.querySelector(".cp-name").onchange=e=>{ chemProductSet(c.id,"name",e.target.value); };
+    const pi=row.querySelector(".cp-price");
+    pi.oninput=e=>{ const cl=e.target.value.replace(/[^\d.]/g,""); if(cl!==e.target.value){const p=e.target.selectionStart;e.target.value=cl;e.target.setSelectionRange(p,p);} };
+    pi.onchange=e=>{ chemProductSet(c.id,"price",e.target.value); };
+    row.querySelector(".ent-del").onclick=()=>{ chemProductRemove(c.id); renderSettings(); };
+    host.appendChild(row);
+  });
+}
+function renderChemDoseList(){
+  const S=STR[lang], host=$("#chemDoseList"); host.innerHTML="";
+  const items=alive(lists.chemDoses).slice().sort((a,b)=>natCmp(a.name,b.name));
+  if(!items.length){
+    const e=document.createElement("div"); e.className="ent-empty"; e.textContent=S.cdEmpty; host.appendChild(e); return;
+  }
+  items.forEach(c=>{
+    const row=document.createElement("div"); row.className="ent-row cp-row";
+    row.innerHTML=`<input class="cp-name" name="cdName" value="${esc(c.name)}" aria-label="${S.cpNamePh}">
+                   <span class="cp-cur">RM</span>
+                   <input class="cp-price" name="cdPrice" inputmode="decimal" value="${esc(c.price)}" placeholder="0.00" aria-label="${S.cdPricePh}">
+                   <button class="dose-unit-seg" type="button" aria-label="unit">/${c.unit}</button>
+                   <button class="ent-del" aria-label="delete">🗑</button>`;
+    row.querySelector(".cp-name").onchange=e=>{ chemDoseSet(c.id,"name",e.target.value); };
+    const pi=row.querySelector(".cp-price");
+    pi.oninput=e=>{ const cl=e.target.value.replace(/[^\d.]/g,""); if(cl!==e.target.value){const p=e.target.selectionStart;e.target.value=cl;e.target.setSelectionRange(p,p);} };
+    pi.onchange=e=>{ chemDoseSet(c.id,"price",e.target.value); };
+    row.querySelector(".dose-unit-seg").onclick=()=>{ chemDoseSet(c.id,"unit", c.unit==="ml"?"g":"ml"); renderChemDoseList(); };
+    row.querySelector(".ent-del").onclick=()=>{ chemDoseRemove(c.id); renderSettings(); };
+    host.appendChild(row);
+  });
 }
 function renderTrash(){
   const S=STR[lang], host=$("#trashList"); host.innerHTML="";
@@ -1721,12 +2011,36 @@ function mixSnapshot(){
   const V=tankVol(); const chems=[];
   state.chems.forEach(c=>{
     const res=calcChem(c); if(!res.ok) return;
+    const packs=(res.packs!=null&&!res.packMismatch)?res.packs:null;
+    // COST — two pricing modes, dose-priced (per ml/g) takes priority over pack-priced:
+    let unitPrice=null, cost=null, priceMode=null, priceUnit=null, usedAmt=null;
+    const dose=chemDoseByName(c.name);
+    if(dose){
+      // res.base is the total product used in base units (g for mass, ml for vol)
+      // convert to the dose's priced unit if needed (base is g or ml; dose.unit is g or ml)
+      const amt=res.base;   // already in g (mass) or ml (vol)
+      // only price if the family matches the dose unit's family
+      const doseFamily = dose.unit==="g" ? "mass" : "vol";
+      if(res.family===doseFamily){
+        usedAmt=amt; unitPrice=dose.price; priceMode="dose"; priceUnit=dose.unit;
+        cost=amt*dose.price;
+      }
+    }
+    if(cost==null){
+      const pp=chemPriceByName(c.name);
+      if(pp!=null && packs!=null){ unitPrice=pp; cost=pp*packs; priceMode="pack"; priceUnit="pack"; }
+    }
     chems.push({
       name:(c.name||"").trim(), pack:(c.pack||"").trim(),
       mode:c.mode, rate:String(c.rate||""), basis:String(c.basis||"1"),
       disp:res.disp, dispUnit:res.dispUnit,
-      packs:(res.packs!=null&&!res.packMismatch)?res.packs:null,
-      packUnit:res.family==="mass"?STR[lang].bagUnit:STR[lang].bottleUnit
+      packs,
+      packUnit:res.family==="mass"?STR[lang].bagUnit:STR[lang].bottleUnit,
+      unitPrice: unitPrice!=null ? unitPrice : null,
+      priceMode,                 // "dose" | "pack" | null
+      priceUnit,                 // "ml" | "g" | "pack" | null
+      usedAmt: usedAmt!=null ? usedAmt : null,   // amount used in priceUnit (dose mode)
+      cost: cost!=null ? cost : null
     });
   });
   return { tank:V||"", chems };
@@ -2151,6 +2465,308 @@ async function exportLogsExcel(){
     a.click(); URL.revokeObjectURL(a.href); toast(S.exportedCsv);
   }
 }
+// ===== Chemical cost report =====
+// total RM cost of a single log (sum of chem costs that have a price)
+function logChemCost(r){
+  return (r.chems||[]).reduce((s,c)=> s + (typeof c.cost==="number" ? c.cost : 0), 0);
+}
+function logAdjust(r){ const a=parseFloat(r.costAdjust); return isFinite(a)?a:0; }
+function logCost(r){ return logChemCost(r) + logAdjust(r); }
+function logHasCost(r){ return (r.chems||[]).some(c=>typeof c.cost==="number" && c.cost>0) || logAdjust(r)!==0; }
+function logSetAdjust(id, val){ const r=logs.find(x=>x.id===id); if(r){ const a=parseFloat(String(val).replace(/[^\d.\-]/g,"")); r.costAdjust = isFinite(a)?a:0; saveLogs(); } }
+// month key from a log's `when`, e.g. "2026-07"
+function logMonthKey(r){
+  const d=new Date(r.when); if(isNaN(d)){ return (r.when||"").slice(0,7)||"—"; }
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+}
+function monthLabel(key){
+  const [y,m]=key.split("-"); if(!m) return key;
+  const names = lang==="zh"
+    ? ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"]
+    : ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const mi=parseInt(m,10)-1;
+  return lang==="zh" ? `${y}年${names[mi]||m}` : `${names[mi]||m} ${y}`;
+}
+function rm(n){ return "RM " + (Math.round(n*100)/100).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+// group alive+deleted logs by month for the report (only logs that carry a cost)
+function costByMonth(includeDeleted){
+  const src = includeDeleted ? logs.slice() : aliveLogs();
+  const groups={};
+  src.forEach(r=>{
+    if(!logHasCost(r)) return;
+    const key=logMonthKey(r);
+    (groups[key]=groups[key]||[]).push(r);
+  });
+  return groups;
+}
+
+// ===== User guide =====
+function guideSections(){
+  // bilingual content; each section: {icon, title, body:[...paragraphs/steps]}
+  const zh=[
+    {icon:"💧", title:"1. 配药计算（主页）", body:[
+      "先填「水箱容量」（例如 1000 L）。",
+      "在「药剂」卡里填药剂名称、包装（如 1kg 或 1L），再选「用量」或「稀释比」。",
+      "用量：填每几升水用多少（例：40 g 兑 20 L）。稀释比：填 1 : N（例：1 : 500）。",
+      "系统即时算出整桶需要的份量，以及需要几包/几瓶。",
+      "按「＋ 添加药剂」可混合多种药剂（缺工时常见的桶混）。"
+    ]},
+    {icon:"📋", title:"2. 配方总览与分享", body:[
+      "配方总览列出每种药剂的份量，最后一行是清水用量。",
+      "可一键分享到 WhatsApp，方便发给工人照着配。"
+    ]},
+    {icon:"📝", title:"3. 记录喷洒", body:[
+      "按「记录喷洒」保存一次施药：选喷洒位置、工人、日期时间。",
+      "位置可选整个农场、某区域、某行、或某几棵树。",
+      "记录会保存当时的配方快照（日后改价格不影响旧记录）。",
+      "配方里的药剂都会一并记录。药剂单价不是必填，但建议设好价格——这样每次喷洒都能自动算出成本，长期就能看清花费。"
+    ]},
+    {icon:"🏡", title:"4. 农场结构（设置）", body:[
+      "在设置里建立农场 → 区域 → 行 → 树。",
+      "区域和行支持范围快速生成：A-Z、AA-ZZ（676 个）、1-50、C1-C20 等，大农场一次建好。",
+      "记录喷洒选位置时，区域/行很多也不怕：超过一定数量会自动出现搜索框。",
+      "删除的项目进「回收站」，可恢复或永久删除。"
+    ]},
+    {icon:"👷", title:"5. 工人管理（设置）", body:[
+      "为每位工人设工号与姓名，工号自动大写、不重复。",
+      "工号可回收：工人离职后，其工号可重新分配给新人（外劳流动大时很实用），不会与在职工人重复。",
+      "记录喷洒时选工人：10 人以内直接点选；超过 10 人自动出现搜索框与列表，大队伍也好找（可按工号或姓名搜索）。",
+      "可从 Excel / CSV 批量导入（两栏：工号、姓名），一次过录入整队工人。"
+    ]},
+    {icon:"💰", title:"6. 药剂价格（设置）", body:[
+      "「药剂价格」：整包/整瓶施药时用。填每包/每瓶的价格（RM），价格随时可改。成本 = 用了几包 × 每包价格。",
+      "「点治药剂（按用量）」：少量使用时用（点治病树、增效剂）。按每 ml 或每 g 计价，成本 = 实际用量 × 单价。田间难以精准称量，这样更贴近真实花费。",
+      "同一种药剂可同时出现在两个列表里：整桶喷洒时按「每包」算，点治一棵病树时按「用量」算——不必重复建两个不同名字。",
+      "自动判断：记录喷洒时，若药剂在「点治」列表且单位对得上（ml 对液体、g 对粉剂），优先按用量算；否则按每包算。若都没设价格，则不计成本（记录照常保存）。",
+      "小贴士：若把液体误设成 g（或粉剂误设成 ml），系统会自动跳过该点治价、改用每包价，不会算出错误金额。"
+    ]},
+    {icon:"📊", title:"7. 成本报告", body:[
+      "在「药剂价格」区按「成本报告」。",
+      "自动按月份分组，显示每月合计与总计。",
+      "每笔记录展开每种药剂的成本明细（桶混时特别有用）。",
+      "「人工调整」：现场无法精准称量时，可手动加减金额。",
+      "记录可删除 / 恢复 / 永久删除，也可导出 Excel。"
+    ]},
+    {icon:"📴", title:"8. 离线与安装", body:[
+      "本应用可离线使用（果园信号弱也能用）。",
+      "可「添加到主屏幕」当作 App 使用。",
+      "右上角地球按钮可切换中文 / English。"
+    ]}
+  ];
+  const en=[
+    {icon:"💧", title:"1. Tank-mix calculator (home)", body:[
+      "Enter the Tank volume first (e.g. 1000 L).",
+      "In a Chemical card, type the name and pack size (e.g. 1kg or 1L), then pick Rate or Ratio.",
+      "Rate: amount per so many litres (e.g. 40 g per 20 L). Ratio: 1 : N (e.g. 1 : 500).",
+      "It instantly shows how much the whole tank needs, and how many bags/bottles.",
+      "Tap ＋ Add chemical to tank-mix several products (common when labor is short)."
+    ]},
+    {icon:"📋", title:"2. Mix summary & sharing", body:[
+      "The mix summary lists each chemical's amount, with clean water on the last line.",
+      "Share to WhatsApp in one tap — handy to send to your workers."
+    ]},
+    {icon:"📝", title:"3. Log spraying", body:[
+      "Tap Log spraying to save a spray: choose where, which workers, and the date/time.",
+      "Target can be the whole farm, a zone, a row, or specific trees.",
+      "Each log saves a snapshot of the mix (changing prices later won't alter old logs).",
+      "The chemicals in your mix are always recorded in the log. A unit price isn't required, but you're encouraged to set one — then every spray's cost is calculated automatically, so you can see your spend over time."
+    ]},
+    {icon:"🏡", title:"4. Farm structure (settings)", body:[
+      "Build farm → zone → row → tree in Settings.",
+      "Zones and rows support quick range generation: A-Z, AA-ZZ (676), 1-50, C1-C20 — set up a big farm in one go.",
+      "When picking a target while logging, a search box appears automatically once there are many zones/rows.",
+      "Deleted items go to Trash — restore or permanently delete."
+    ]},
+    {icon:"👷", title:"5. Workers (settings)", body:[
+      "Give each worker a staff ID and name; IDs auto-uppercase and stay unique.",
+      "Recyclable IDs: when a worker leaves, their ID can be reassigned to a new hire (handy with high foreign-worker turnover) — it won't clash with an active worker.",
+      "Picking workers when logging: up to 10 shows simple tap chips; above 10, a search box and list appear automatically so big crews stay easy to find (search by ID or name).",
+      "Bulk-import from Excel / CSV (two columns: Staff ID, Name) to enter a whole crew at once."
+    ]},
+    {icon:"💰", title:"6. Chemical price (settings)", body:[
+      "Chemical price: for whole-pack/bottle spraying. Enter the price per pack/bottle (RM), editable anytime. Cost = packs used × price per pack.",
+      "Spot-dose chemicals (by amount): for small-quantity use (sick tree, adjuvants). Priced per ml or per g, so cost = actual amount used × unit price — much closer to real spend when you can't measure exactly in the field.",
+      "The same chemical can live in BOTH lists: it's priced per pack for a full-tank spray, and per amount for spot-treating one sick tree — no need to create two differently-named entries.",
+      "Automatic choice: when logging, if the chemical is in the spot-dose list and the unit matches (ml for liquids, g for powders), it prices by amount used first; otherwise it uses the per-pack price. If neither is set, no cost is recorded (the log still saves).",
+      "Nice safeguard: if you mistakenly set a liquid in g (or a powder in ml), the app skips that spot-dose price and falls back to the per-pack price instead of computing a wrong amount."
+    ]},
+    {icon:"📊", title:"7. Cost report", body:[
+      "Tap Cost report in the Chemical price section.",
+      "Auto-grouped by month, with month totals and a grand total.",
+      "Each log breaks down the cost per chemical (great for tank-mixes).",
+      "Manual adjust: nudge the total up or down when field measuring isn't exact.",
+      "Records can be deleted / restored / purged, and exported to Excel."
+    ]},
+    {icon:"📴", title:"8. Offline & install", body:[
+      "The app works offline (fine in low-signal orchards).",
+      "Add to Home Screen to use it like an app.",
+      "The globe button (top right) switches 中文 / English."
+    ]}
+  ];
+  return lang==="zh"?zh:en;
+}
+function renderGuide(){
+  const S=STR[lang];
+  $("#t-guideTitle").textContent=S.guideTitle;
+  const host=$("#guideBody"); host.innerHTML="";
+  const intro=document.createElement("div"); intro.className="guide-intro"; intro.textContent=S.guideIntro;
+  host.appendChild(intro);
+  guideSections().forEach(sec=>{
+    const card=document.createElement("div"); card.className="guide-sec";
+    const h=document.createElement("div"); h.className="guide-h";
+    h.innerHTML=`<span class="guide-ico">${sec.icon}</span><span class="guide-t">${esc(sec.title)}</span>`;
+    card.appendChild(h);
+    const ul=document.createElement("div"); ul.className="guide-steps";
+    sec.body.forEach(line=>{ const p=document.createElement("div"); p.className="guide-step"; p.textContent=line; ul.appendChild(p); });
+    card.appendChild(ul);
+    host.appendChild(card);
+  });
+  // QR code + link to share/open the app (inline SVG so it works offline)
+  const qr=document.createElement("div"); qr.className="guide-qr";
+  qr.innerHTML=`<div class="guide-qr-h">${esc(S.guideShareTitle)}</div>
+    <div class="guide-qr-img"><svg viewBox="0 0 37 37" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" width="176" height="176" role="img" aria-label="QR code"><rect width="37" height="37" fill="#ffffff"/><path d="M2 2h7v1h-7zM11 2h1v1h-1zM15 2h2v1h-2zM19 2h2v1h-2zM23 2h2v1h-2zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM10 3h3v1h-3zM14 3h1v1h-1zM18 3h1v1h-1zM20 3h1v1h-1zM22 3h3v1h-3zM26 3h1v1h-1zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h2v1h-2zM14 4h1v1h-1zM16 4h1v1h-1zM18 4h1v1h-1zM22 4h3v1h-3zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h2v1h-2zM13 5h1v1h-1zM16 5h1v1h-1zM18 5h1v1h-1zM20 5h1v1h-1zM22 5h2v1h-2zM25 5h2v1h-2zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM11 6h2v1h-2zM15 6h4v1h-4zM22 6h2v1h-2zM25 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM11 7h2v1h-2zM14 7h1v1h-1zM17 7h1v1h-1zM21 7h1v1h-1zM24 7h1v1h-1zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h1v1h-1zM12 9h1v1h-1zM16 9h3v1h-3zM21 9h2v1h-2zM24 9h2v1h-2zM2 10h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM15 10h2v1h-2zM19 10h1v1h-1zM21 10h1v1h-1zM24 10h5v1h-5zM31 10h3v1h-3zM2 11h2v1h-2zM6 11h2v1h-2zM9 11h2v1h-2zM15 11h1v1h-1zM17 11h1v1h-1zM19 11h3v1h-3zM23 11h1v1h-1zM25 11h1v1h-1zM30 11h3v1h-3zM4 12h2v1h-2zM7 12h2v1h-2zM10 12h1v1h-1zM14 12h4v1h-4zM19 12h1v1h-1zM22 12h3v1h-3zM26 12h1v1h-1zM30 12h1v1h-1zM32 12h2v1h-2zM5 13h1v1h-1zM9 13h2v1h-2zM13 13h1v1h-1zM15 13h1v1h-1zM17 13h6v1h-6zM25 13h1v1h-1zM27 13h7v1h-7zM2 14h1v1h-1zM5 14h4v1h-4zM11 14h2v1h-2zM14 14h2v1h-2zM19 14h1v1h-1zM21 14h1v1h-1zM26 14h1v1h-1zM28 14h2v1h-2zM34 14h1v1h-1zM3 15h1v1h-1zM5 15h1v1h-1zM9 15h2v1h-2zM12 15h3v1h-3zM19 15h2v1h-2zM23 15h1v1h-1zM25 15h1v1h-1zM28 15h2v1h-2zM32 15h3v1h-3zM2 16h2v1h-2zM6 16h1v1h-1zM8 16h2v1h-2zM11 16h1v1h-1zM13 16h6v1h-6zM22 16h2v1h-2zM26 16h3v1h-3zM30 16h1v1h-1zM33 16h1v1h-1zM2 17h2v1h-2zM6 17h2v1h-2zM11 17h1v1h-1zM18 17h1v1h-1zM20 17h1v1h-1zM22 17h1v1h-1zM27 17h1v1h-1zM29 17h1v1h-1zM32 17h1v1h-1zM34 17h1v1h-1zM4 18h3v1h-3zM8 18h1v1h-1zM14 18h1v1h-1zM16 18h2v1h-2zM19 18h1v1h-1zM22 18h1v1h-1zM24 18h4v1h-4zM29 18h2v1h-2zM34 18h1v1h-1zM4 19h2v1h-2zM12 19h1v1h-1zM14 19h4v1h-4zM20 19h3v1h-3zM24 19h2v1h-2zM27 19h2v1h-2zM31 19h4v1h-4zM3 20h2v1h-2zM7 20h2v1h-2zM14 20h4v1h-4zM19 20h3v1h-3zM23 20h3v1h-3zM27 20h1v1h-1zM29 20h1v1h-1zM31 20h2v1h-2zM34 20h1v1h-1zM2 21h1v1h-1zM5 21h3v1h-3zM9 21h1v1h-1zM11 21h1v1h-1zM15 21h1v1h-1zM17 21h2v1h-2zM21 21h1v1h-1zM24 21h1v1h-1zM26 21h1v1h-1zM30 21h3v1h-3zM4 22h1v1h-1zM8 22h1v1h-1zM14 22h1v1h-1zM16 22h2v1h-2zM20 22h1v1h-1zM24 22h1v1h-1zM26 22h2v1h-2zM29 22h3v1h-3zM34 22h1v1h-1zM2 23h2v1h-2zM5 23h2v1h-2zM14 23h2v1h-2zM24 23h2v1h-2zM30 23h2v1h-2zM2 24h1v1h-1zM4 24h2v1h-2zM8 24h1v1h-1zM10 24h1v1h-1zM12 24h2v1h-2zM15 24h2v1h-2zM21 24h1v1h-1zM24 24h1v1h-1zM30 24h1v1h-1zM33 24h1v1h-1zM2 25h1v1h-1zM4 25h2v1h-2zM7 25h1v1h-1zM9 25h1v1h-1zM13 25h1v1h-1zM17 25h2v1h-2zM21 25h2v1h-2zM24 25h1v1h-1zM27 25h7v1h-7zM2 26h7v1h-7zM10 26h6v1h-6zM18 26h1v1h-1zM26 26h6v1h-6zM33 26h2v1h-2zM10 27h1v1h-1zM15 27h1v1h-1zM17 27h6v1h-6zM26 27h1v1h-1zM30 27h1v1h-1zM32 27h1v1h-1zM34 27h1v1h-1zM2 28h7v1h-7zM11 28h1v1h-1zM13 28h1v1h-1zM15 28h1v1h-1zM17 28h1v1h-1zM19 28h1v1h-1zM22 28h1v1h-1zM25 28h2v1h-2zM28 28h1v1h-1zM30 28h1v1h-1zM32 28h2v1h-2zM2 29h1v1h-1zM8 29h1v1h-1zM11 29h2v1h-2zM15 29h1v1h-1zM17 29h1v1h-1zM19 29h3v1h-3zM24 29h3v1h-3zM30 29h3v1h-3zM34 29h1v1h-1zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM11 30h1v1h-1zM13 30h2v1h-2zM16 30h1v1h-1zM18 30h1v1h-1zM21 30h1v1h-1zM26 30h6v1h-6zM33 30h1v1h-1zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM12 31h1v1h-1zM16 31h1v1h-1zM19 31h2v1h-2zM23 31h1v1h-1zM26 31h2v1h-2zM29 31h2v1h-2zM33 31h2v1h-2zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM11 32h2v1h-2zM14 32h2v1h-2zM17 32h1v1h-1zM21 32h1v1h-1zM26 32h1v1h-1zM29 32h2v1h-2zM32 32h3v1h-3zM2 33h1v1h-1zM8 33h1v1h-1zM13 33h1v1h-1zM15 33h1v1h-1zM21 33h2v1h-2zM24 33h1v1h-1zM27 33h1v1h-1zM29 33h4v1h-4zM2 34h7v1h-7zM10 34h1v1h-1zM12 34h4v1h-4zM17 34h1v1h-1zM19 34h1v1h-1zM21 34h1v1h-1zM24 34h4v1h-4zM29 34h1v1h-1zM33 34h1v1h-1z" fill="#137a4a"/></svg></div>
+    <div class="guide-qr-sub">${esc(S.guideShareSub)}</div>
+    <a class="guide-qr-link" href="https://stanleywoosweeleong.github.io/chemloglab/" target="_blank" rel="noopener">https://stanleywoosweeleong.github.io/chemloglab/</a>`;
+  host.appendChild(qr);
+  const foot=document.createElement("div"); foot.className="guide-foot"; foot.textContent=S.guideFoot;
+  host.appendChild(foot);
+}
+
+function renderCostReport(){
+  const S=STR[lang];
+  $("#t-costTitle").textContent=S.costTitle;
+  $("#costExport").textContent=S.exportExcel;
+  const host=$("#costBody"); host.innerHTML="";
+
+  const alive=costByMonth(false);
+  const monthsAll=Object.keys(alive).sort().reverse();  // newest month first
+
+  if(!monthsAll.length){
+    const e=document.createElement("div"); e.className="cost-empty"; e.textContent=S.costEmpty; host.appendChild(e);
+  } else {
+    // grand total
+    let grand=0; monthsAll.forEach(k=> alive[k].forEach(r=> grand+=logCost(r)));
+    const gt=document.createElement("div"); gt.className="cost-grand";
+    gt.innerHTML=`<span>${S.costGrand}</span><span class="cg-amt">${rm(grand)}</span>`;
+    host.appendChild(gt);
+
+    monthsAll.forEach(key=>{
+      const rows=alive[key];
+      const monthTotal=rows.reduce((s,r)=>s+logCost(r),0);
+      const card=document.createElement("div"); card.className="cost-month";
+      const head=document.createElement("div"); head.className="cost-mhead";
+      head.innerHTML=`<span class="cm-name">${monthLabel(key)}</span><span class="cm-amt">${rm(monthTotal)}</span>`;
+      card.appendChild(head);
+      // each log line, newest first
+      rows.slice().sort((a,b)=>(b.when||"").localeCompare(a.when||"")).forEach(r=>{
+        const line=document.createElement("div"); line.className="cost-log";
+        const priced=(r.chems||[]).filter(c=>typeof c.cost==="number"&&c.cost>0);
+        // per-chemical breakdown — dose-priced (amount × RM/unit) vs pack-priced (packs × RM/pack)
+        const breakdown = priced.map(c=>{
+          let qty="";
+          if(c.priceMode==="dose" && c.usedAmt!=null){
+            qty = `${fmt(c.usedAmt)} ${c.priceUnit} × ${rm(c.unitPrice)}/${c.priceUnit}`;
+          } else if(c.packs!=null){
+            qty = `${fmt(c.packs)} ${c.packUnit||""} × ${rm(c.unitPrice)}`;
+          }
+          return `<div class="cl-item"><span class="ci-name">${esc(c.name||"—")}</span><span class="ci-qty">${qty}</span><span class="ci-amt">${rm(c.cost)}</span></div>`;
+        }).join("");
+        const adj=logAdjust(r);
+        const chemSum=logChemCost(r);
+        // adjustment row (shows subtotal + adjust when non-zero)
+        const adjRow = `<div class="cl-adjust">
+            <span class="ca-lab">${S.costAdjustLabel}</span>
+            <div class="ca-input"><span class="ca-rm">RM</span><input class="ca-field" name="costAdjust" inputmode="decimal" value="${adj!==0?esc(String(adj)):''}" placeholder="0" aria-label="${S.costAdjustLabel}"></div>
+          </div>`;
+        line.innerHTML=`<div class="cl-head">
+            <span class="cl-when">${fmtWhen(r.when)}</span>
+            <span class="cl-total">${rm(logCost(r))}</span>
+            <button class="cl-del" aria-label="delete">🗑</button>
+          </div>
+          <div class="cl-items">${breakdown}</div>
+          ${adjRow}`;
+        line.querySelector(".cl-del").onclick=async()=>{
+          if(await askConfirm(S.costDelConfirm, {yes:S.confirmDelete})){ logRemove(r.id); renderCostReport(); }
+        };
+        const af=line.querySelector(".ca-field");
+        af.oninput=e=>{ const cl=e.target.value.replace(/[^\d.\-]/g,""); if(cl!==e.target.value){const p=e.target.selectionStart;e.target.value=cl;e.target.setSelectionRange(p,p);} };
+        af.onchange=e=>{ logSetAdjust(r.id, e.target.value); renderCostReport(); };
+        card.appendChild(line);
+      });
+      host.appendChild(card);
+    });
+  }
+
+  // trashed cost logs (restore / purge)
+  const del=deletedLogs().filter(logHasCost);
+  if(del.length){
+    const th=document.createElement("div"); th.className="cost-trash-h"; th.textContent=S.costTrash; host.appendChild(th);
+    del.forEach(r=>{
+      const priced=(r.chems||[]).filter(c=>typeof c.cost==="number"&&c.cost>0);
+      const names=priced.map(c=>c.name).filter(Boolean).join(", ");
+      const line=document.createElement("div"); line.className="cost-log trashed";
+      line.innerHTML=`<div class="cl-head">
+          <span class="cl-when">${fmtWhen(r.when)}</span>
+          <span class="cl-total">${rm(logCost(r))}</span>
+        </div>
+        <div class="cl-chems-min">${esc(names||"—")}</div>
+        <div class="cl-trash-btns">
+          <button class="cl-restore">${S.restore}</button>
+          <button class="cl-purge" aria-label="purge">✕</button>
+        </div>`;
+      line.querySelector(".cl-restore").onclick=()=>{ logRestore(r.id); renderCostReport(); };
+      line.querySelector(".cl-purge").onclick=async()=>{ if(await askConfirm(S.purgeConfirm,{yes:S.purgeYes})){ logPurge(r.id); renderCostReport(); } };
+      host.appendChild(line);
+    });
+  }
+}
+
+async function exportCostExcel(){
+  const S=STR[lang];
+  const groups=costByMonth(false);
+  const months=Object.keys(groups).sort();
+  if(!months.length){ toast(S.costEmpty); return; }
+  const header=[S.xlMonth,S.xlWhen,S.xlChem,S.xlPacks,S.costUnitPrice,S.costCol];
+  const data=[header];
+  let grand=0;
+  months.forEach(key=>{
+    let mTotal=0;
+    groups[key].slice().sort((a,b)=>(a.when||"").localeCompare(b.when||"")).forEach(r=>{
+      (r.chems||[]).forEach(c=>{
+        if(typeof c.cost!=="number" || !(c.cost>0)) return;
+        const qty = (c.priceMode==="dose" && c.usedAmt!=null)
+          ? `${fmt(c.usedAmt)} ${c.priceUnit}`
+          : (c.packs!=null?`${fmt(c.packs)} ${c.packUnit}`:"");
+        const up = (c.unitPrice!=null)
+          ? (c.priceMode==="dose" ? `${rm(c.unitPrice)}/${c.priceUnit}` : rm(c.unitPrice))
+          : "";
+        data.push([ monthLabel(key), fmtWhen(r.when), c.name||"", qty, up, rm(c.cost) ]);
+        mTotal+=c.cost;
+      });
+      // manual adjustment as its own row
+      const adj=logAdjust(r);
+      if(adj!==0){ data.push([ monthLabel(key), fmtWhen(r.when), S.costAdjustLabel, "", "", rm(adj) ]); mTotal+=adj; }
+    });
+    data.push(["", "", "", "", S.costMonthTotal, rm(mTotal)]);
+    grand+=mTotal;
+  });
+  data.push(["", "", "", "", S.costGrand, rm(grand)]);
+  try{
+    const XLSX=await loadSheetJS();
+    const ws=XLSX.utils.aoa_to_sheet(data);
+    ws["!cols"]=[{wch:14},{wch:16},{wch:18},{wch:12},{wch:12},{wch:12}];
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Cost");
+    const d=new Date(); XLSX.writeFile(wb, `chemcost_${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}.xlsx`);
+  }catch(err){
+    const csv=data.map(r=>r.map(cell=>{ const s=String(cell==null?"":cell); return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s; }).join(",")).join("\n");
+    const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    const d=new Date(); a.download=`chemcost_${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}.csv`;
+    a.click(); URL.revokeObjectURL(a.href); toast(S.exportedCsv);
+  }
+}
+
 if("serviceWorker" in navigator){
   window.addEventListener("load", ()=>{
     navigator.serviceWorker.register("sw.js").catch(()=>{});

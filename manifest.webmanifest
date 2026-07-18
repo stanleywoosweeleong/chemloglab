@@ -1,6 +1,6 @@
 {
-  "name": "农药记录 · ChemLogger",
-  "short_name": "ChemLogger",
+  "name": "农药记录管理 · ChemLog Lab",
+  "short_name": "ChemLog Lab",
   "description": "Bilingual agrochemical tank-mix calculator and spray-application logger for durian and other farms. Works offline.",
   "lang": "zh",
   "dir": "auto",

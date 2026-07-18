@@ -1,6 +1,6 @@
-/* ChemLogger service worker — network-first so updates always land,
+/* ChemLog Lab service worker — network-first so updates always land,
    with an offline cache fallback. Bump CACHE on every deploy. */
-const CACHE = "chemlogger-v3";
+const CACHE = "chemloglab-v4";
 
 // Files that make up the app shell (relative to the SW scope).
 const SHELL = [
