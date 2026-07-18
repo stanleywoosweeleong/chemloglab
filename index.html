@@ -555,7 +555,7 @@ header{
       </div>
       <input type="file" id="workerFile" accept=".xlsx,.xls,.csv" aria-label="Import workers file" hidden>
       <div class="worker-add">
-        <input class="w-sid" id="workerAddSid" type="text" placeholder="" aria-label="Staff ID">
+        <input class="w-sid" name="staffId" id="workerAddSid" type="text" placeholder="" aria-label="Staff ID">
         <input class="ent-add" id="workerAdd" type="text" placeholder="" aria-label="Worker name">
         <button class="ent-addbtn" id="workerAddBtn">＋</button>
       </div>
@@ -1137,12 +1137,12 @@ function renderChems(){
     const rUnit = c.rateUnit || u1;   // default to the small unit
     card.innerHTML=`
       <div class="chem-top">
-        <input class="chem-name" aria-label="${S.name}" placeholder="${S.name}" value="${(c.name||"").replace(/"/g,'&quot;')}">
+        <input class="chem-name" name="chemName" aria-label="${S.name}" placeholder="${S.name}" value="${(c.name||"").replace(/"/g,'&quot;')}">
         <button class="del" title="delete">🗑</button>
       </div>
       <div class="pack-row">
         <span class="pack-lab">${S.packLab}</span>
-        <input class="pack-in" aria-label="${S.packLab}" inputmode="text" type="text" value="${packVal}" placeholder="${S.packPh}">
+        <input class="pack-in" name="packSize" aria-label="${S.packLab}" inputmode="text" type="text" value="${packVal}" placeholder="${S.packPh}">
       </div>
       <div class="seg mode-seg">
         <button data-mode="per_L" class="${!isRatio?'on':''}">${S.mRate}</button>
@@ -1151,16 +1151,16 @@ function renderChems(){
       ${isRatio ? `
       <div class="rate-wrap">
         <span class="rate-pre">1 :</span>
-        <input class="rate-in ratio" aria-label="${S.mRatio}" inputmode="decimal" type="text" value="${rateVal}" placeholder="">
+        <input class="rate-in ratio" name="ratio" aria-label="${S.mRatio}" inputmode="decimal" type="text" value="${rateVal}" placeholder="">
       </div>` : `
       <div class="rate-line">
-        <input class="rate-in amt" aria-label="${S.ariaAmount}" inputmode="decimal" type="text" value="${rateVal}" placeholder="">
+        <input class="rate-in amt" name="amount" aria-label="${S.ariaAmount}" inputmode="decimal" type="text" value="${rateVal}" placeholder="">
         <div class="unit-seg">
           <button class="unit-btn ${rUnit===u1?'on':''}" data-unit="${u1}">${u1}</button>
           <button class="unit-btn ${rUnit===u2?'on':''}" data-unit="${u2}">${u2}</button>
         </div>
         <span class="rate-per">${S.perWord}</span>
-        <input class="basis-in" aria-label="${S.ariaBasis}" inputmode="decimal" type="text" value="${(c.basis!=null?String(c.basis):'').replace(/"/g,'&quot;')}" placeholder="">
+        <input class="basis-in" name="perLitres" aria-label="${S.ariaBasis}" inputmode="decimal" type="text" value="${(c.basis!=null?String(c.basis):'').replace(/"/g,'&quot;')}" placeholder="">
         <span class="rate-perL">L</span>
       </div>`}
       <div class="result">
@@ -1416,9 +1416,9 @@ function zoneRowHTML(f,z,S){
     ? rowsSectionHTML(z,S,total)
     : `<div class="zone-trees">
          <span class="zt-lab">${S.treesLab}</span>
-         <input class="zt-from" aria-label="${S.ariaTreeFrom}" inputmode="numeric" type="text" value="${esc(z.tFrom)}">
+         <input class="zt-from" name="treeFrom" aria-label="${S.ariaTreeFrom}" inputmode="numeric" type="text" value="${esc(z.tFrom)}">
          <span class="zt-dash">–</span>
-         <input class="zt-to" aria-label="${S.ariaTreeTo}" inputmode="numeric" type="text" value="${esc(z.tTo)}">
+         <input class="zt-to" name="treeTo" aria-label="${S.ariaTreeTo}" inputmode="numeric" type="text" value="${esc(z.tTo)}">
          <span class="zt-count">${zoneTreeCount(z)?S.treesCount(zoneTreeCount(z)):""}</span>
        </div>`;
   const open = zoneDetailOpen.has(z.id);
@@ -1433,10 +1433,10 @@ function zoneRowHTML(f,z,S){
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
         </button>
         <div class="zone-idblock">
-          <input class="zone-name" aria-label="${S.ariaZoneName}" value="${esc(z.name)}">
+          <input class="zone-name" name="zoneName" aria-label="${S.ariaZoneName}" value="${esc(z.name)}">
           <span class="zone-sum">${summary}</span>
         </div>
-        <label class="rows-toggle"><input type="checkbox" class="rows-chk" ${z.hasRows?'checked':''}>${S.hasRows}</label>
+        <label class="rows-toggle"><input type="checkbox" class="rows-chk" name="hasRows" ${z.hasRows?'checked':''}>${S.hasRows}</label>
         <button class="zone-del" aria-label="delete">🗑</button>
       </div>
       <div class="zone-detail" ${open?'':'hidden'}>${treeUI}</div>
@@ -1447,11 +1447,11 @@ function rowsSectionHTML(z,S,total){
     const rc=rangeCount(r.tFrom,r.tTo);
     return `
     <div class="row-row" data-rid="${r.id}">
-      <input class="row-name" aria-label="${S.ariaRowName}" value="${esc(r.name)}">
+      <input class="row-name" name="rowName" aria-label="${S.ariaRowName}" value="${esc(r.name)}">
       <span class="zt-lab">${S.treesLab}</span>
-      <input class="rt-from" aria-label="${S.ariaTreeFrom}" inputmode="numeric" type="text" value="${esc(r.tFrom)}">
+      <input class="rt-from" name="rowTreeFrom" aria-label="${S.ariaTreeFrom}" inputmode="numeric" type="text" value="${esc(r.tFrom)}">
       <span class="zt-dash">–</span>
-      <input class="rt-to" aria-label="${S.ariaTreeTo}" inputmode="numeric" type="text" value="${esc(r.tTo)}">
+      <input class="rt-to" name="rowTreeTo" aria-label="${S.ariaTreeTo}" inputmode="numeric" type="text" value="${esc(r.tTo)}">
       <span class="rt-count">${rc?S.treesCount(rc):""}</span>
       <button class="row-del" aria-label="delete">🗑</button>
     </div>`;}).join("");
@@ -1460,7 +1460,7 @@ function rowsSectionHTML(z,S,total){
       <div class="rows-total">${S.rowsTotal(alive(z.rows).length, total)}</div>
       <div class="row-list">${rowsHTML||`<div class="zone-empty">${S.noRows}</div>`}</div>
       <div class="row-gen-row">
-        <input class="row-gen" aria-label="${S.ariaRowGen}" type="text" placeholder="${S.rowGenPh(z.name)}">
+        <input class="row-gen" name="rowGen" aria-label="${S.ariaRowGen}" type="text" placeholder="${S.rowGenPh(z.name)}">
         <button class="row-genbtn">${S.zoneAddBtn}</button>
       </div>
       <div class="row-gen-hint"></div>
@@ -1481,7 +1481,7 @@ function renderFarmList(){
     const zc = alive(f.zones).length;
     card.innerHTML=`
       <div class="ent-row farm-row">
-        <input class="ent-name" aria-label="${S.ariaFarmName||'Farm name'}" value="${esc(f.name)}">
+        <input class="ent-name" name="entName" aria-label="${S.ariaFarmName||'Farm name'}" value="${esc(f.name)}">
         <button class="ent-del" aria-label="delete">🗑</button>
       </div>
       <div class="zones">
@@ -1492,7 +1492,7 @@ function renderFarmList(){
         <div class="zone-rows" ${expanded?'':'hidden'}>${zoneRows}</div>`
         : `<div class="zone-empty">${S.noZones}</div>`}
         <div class="zone-gen-row">
-          <input class="zone-gen" aria-label="${S.ariaZoneGen}" type="text" placeholder="${S.zoneGenPh}">
+          <input class="zone-gen" name="zoneGen" aria-label="${S.ariaZoneGen}" type="text" placeholder="${S.zoneGenPh}">
           <button class="zone-genbtn">${S.zoneAddBtn}</button>
         </div>
         <div class="zone-gen-hint"></div>
@@ -1630,8 +1630,8 @@ function renderWorkerList(){
   }
   workers.forEach(w=>{
     const row=document.createElement("div"); row.className="ent-row worker-row";
-    row.innerHTML=`<input class="w-sid" aria-label="${S.sidPh}" value="${esc(w.sid)}" placeholder="${S.sidPh}">
-                   <input class="ent-name" aria-label="${S.namePh}" value="${esc(w.name)}" placeholder="${S.namePh}">
+    row.innerHTML=`<input class="w-sid" name="staffId" aria-label="${S.sidPh}" value="${esc(w.sid)}" placeholder="${S.sidPh}">
+                   <input class="ent-name" name="entName" aria-label="${S.namePh}" value="${esc(w.name)}" placeholder="${S.namePh}">
                    <button class="ent-del" aria-label="delete">🗑</button>`;
     const sidI=row.querySelector(".w-sid");
     sidI.oninput=e=>{ const p=e.target.selectionStart; e.target.value=e.target.value.toUpperCase(); e.target.setSelectionRange(p,p); };
@@ -1799,7 +1799,7 @@ function renderLogWorkers(){
   }
   host.appendChild(selWrap);
 
-  const search=document.createElement("input"); search.className="wk-search"; search.type="text";
+  const search=document.createElement("input"); search.className="wk-search"; search.name="workerSearch"; search.type="text";
   search.setAttribute("aria-label", S.wkSearchPh);
   search.placeholder=S.wkSearchPh; search.value=logDraft._wkQuery||"";
   host.appendChild(search);
@@ -1910,7 +1910,7 @@ function renderMultiSelect(host, items, opts){
     if(filtered.length>TP_RENDER_CAP){ listBox.appendChild(tpEl("div","log-empty",S.wkMore(filtered.length-TP_RENDER_CAP))); }
   };
   if(useSearch){
-    const s=document.createElement("input"); s.className="wk-search"; s.type="text"; s.placeholder=S.tpSearchPh; s.setAttribute("aria-label", S.tpSearchPh);
+    const s=document.createElement("input"); s.className="wk-search"; s.name="pickerSearch"; s.type="text"; s.placeholder=S.tpSearchPh; s.setAttribute("aria-label", S.tpSearchPh);
     s.oninput=e=>{ query=e.target.value; draw(); };
     host.appendChild(s);
   }
@@ -1932,7 +1932,7 @@ function renderDrillList(host, items, onPick){
     if(filtered.length>TP_RENDER_CAP){ listBox.appendChild(tpEl("div","log-empty",S.wkMore(filtered.length-TP_RENDER_CAP))); }
   };
   if(useSearch){
-    const s=document.createElement("input"); s.className="wk-search"; s.type="text"; s.placeholder=S.tpSearchPh; s.setAttribute("aria-label", S.tpSearchPh);
+    const s=document.createElement("input"); s.className="wk-search"; s.name="pickerSearch"; s.type="text"; s.placeholder=S.tpSearchPh; s.setAttribute("aria-label", S.tpSearchPh);
     s.oninput=e=>{ query=e.target.value; draw(); };
     host.appendChild(s);
   }
@@ -2023,9 +2023,9 @@ function renderTargetPicker(){
     host.appendChild(tpEl("div","tp-hint",S.tpTreesHint));
     const wrap=document.createElement("div"); wrap.className="tp-trees";
     wrap.innerHTML=`<span class="zt-lab">${S.treeShort}</span>
-      <input class="tp-tf" aria-label="${S.ariaTreeFrom}" inputmode="numeric" type="text" value="${esc(def.from||"")}">
+      <input class="tp-tf" name="tpTreeFrom" aria-label="${S.ariaTreeFrom}" inputmode="numeric" type="text" value="${esc(def.from||"")}">
       <span class="zt-dash">–</span>
-      <input class="tp-tt" aria-label="${S.ariaTreeTo}" inputmode="numeric" type="text" value="${esc(def.to||"")}">
+      <input class="tp-tt" name="tpTreeTo" aria-label="${S.ariaTreeTo}" inputmode="numeric" type="text" value="${esc(def.to||"")}">
       <button class="tp-treebtn">＋</button>`;
     const tf=wrap.querySelector(".tp-tf"), tt=wrap.querySelector(".tp-tt");
     tf.oninput=e=>e.target.value=e.target.value.replace(/[^\d]/g,"");
