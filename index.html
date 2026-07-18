@@ -1226,11 +1226,13 @@ function renderChems(){
     };
     host.appendChild(card);
   });
-  $("#chemCount").textContent=S.countTxt(state.chems.length);
 }
 
 function renderSummary(){
   const S=STR[lang], V=tankVol();
+  // live chemical count: only entries the user has actually started (name/pack/rate)
+  const filled = state.chems.filter(c => (c.name||"").trim() || (c.pack||"").trim() || String(c.rate||"").trim()).length;
+  $("#chemCount").textContent=S.countTxt(filled);
   const host=$("#sumRows"); host.innerHTML="";
   let any=false;
   state.chems.forEach(c=>{
