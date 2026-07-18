@@ -45,14 +45,14 @@ header{
 .brand{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
 .brand h1{font-size:19px;margin:0;letter-spacing:.2px;font-weight:650}
 .lang{
-  display:inline-flex;align-items:center;gap:5px;
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;box-sizing:border-box;
   border:1px solid var(--line);background:var(--panel);color:var(--dim);
-  border-radius:999px;padding:6px 12px;font-size:13px;font-weight:650;cursor:pointer;
+  border-radius:999px;height:38px;line-height:1;padding:0 14px;font-size:13px;font-weight:650;cursor:pointer;
 }
 .lang-globe{flex:none;opacity:.85}
 .lang:active{transform:scale(.96)}
 .hbtns{display:flex;align-items:center;gap:8px}
-.icon-btn{border:1px solid var(--line);background:var(--panel);color:var(--dim);
+.icon-btn{border:1px solid var(--line);background:var(--panel);color:var(--dim);box-sizing:border-box;
   width:38px;height:38px;border-radius:999px;display:flex;align-items:center;justify-content:center;
   cursor:pointer;flex:none}
 .icon-btn:active{transform:scale(.94)}
@@ -160,12 +160,12 @@ header{
 .guide-steps{display:flex;flex-direction:column;gap:7px}
 .guide-step{font-size:14px;color:var(--ink);line-height:1.5;padding-left:14px;position:relative}
 .guide-step::before{content:"·";position:absolute;left:3px;top:-1px;color:var(--accent);font-weight:800;font-size:16px}
-.guide-foot{font-size:13px;color:var(--dim2);text-align:center;margin:18px 2px 8px;line-height:1.5}
-.guide-qr{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 16px;margin:6px 0 4px;text-align:center}
-.guide-qr-h{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:14px}
-.guide-qr-img{display:inline-flex;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.guide-qr{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px 16px;margin:6px 0 4px;text-align:center}
+.guide-qr-h{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:10px}
+.guide-qr-brand{font-size:15px;font-weight:700;color:var(--dark,#0f2419);margin-bottom:16px}
+.guide-qr-img{display:inline-flex;padding:0;background:#fff}
 .guide-qr-img svg{display:block}
-.guide-qr-sub{font-size:13px;color:var(--dim);line-height:1.5;margin:14px auto 12px;max-width:300px}
+.guide-qr-sub{font-size:13px;color:var(--dim);line-height:1.5;margin:18px auto 12px;max-width:300px}
 .guide-qr-link{display:inline-block;font-size:13px;font-family:var(--mono);color:var(--accent);word-break:break-all;text-decoration:none;font-weight:600}
 .guide-qr-link:active{opacity:.6}
 .cost-trash-h{font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin:18px 2px 8px}
@@ -770,7 +770,7 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 
 const STR={
   zh:{title:"农药记录管理",tank:"水箱容量",
-    guideTitle:"使用指南",guideIntro:"这套 App 界面简洁，但功能齐全。以下是各功能的简单说明。",guideFoot:"随时点右上角 (i) 重看本指南。",
+    guideTitle:"使用指南",guideIntro:"这套 App 界面简洁，但功能齐全。以下是各功能的简单说明。",
     guideShareTitle:"分享这个 App",guideShareSub:"用手机相机扫描二维码，即可打开本 App（可「添加到主屏幕」当作 App 使用）。",
     chems:"药剂",add:"添加药剂",recipe:"配方总览",share:"WhatsApp",reset:"清空",
     custom:"自定",name:"药剂名称（可选）",
@@ -835,7 +835,7 @@ const STR={
     costGrand:"总计",costMonthTotal:"月合计",costTrash:"已删除记录",costDelConfirm:"删除这笔成本记录？可在下方恢复。",
     xlMonth:"月份",costCol:"成本 (RM)",costUnitPrice:"单价 (RM/包)"},
   en:{title:"ChemLog Lab",tank:"Tank Volume",
-    guideTitle:"User guide",guideIntro:"This app has a clean look but is rich in what it can do. Here's a quick tour of each feature.",guideFoot:"Tap the (i) at the top right anytime to see this guide again.",
+    guideTitle:"User guide",guideIntro:"This app has a clean look but is rich in what it can do. Here's a quick tour of each feature.",
     guideShareTitle:"Share this app",guideShareSub:"Point your phone camera at the QR code to open the app (then Add to Home Screen to use it like an app).",
     chems:"Chemicals",add:"Add chemical",recipe:"Mix summary",share:"WhatsApp",reset:"Reset",
     custom:"Custom",name:"Product name (optional)",
@@ -1460,7 +1460,7 @@ function renderSummary(){
   }
   if(!V){
     const e=document.createElement("div"); e.className="srow";
-    e.innerHTML=`<span style="color:var(--red)">${lang==="zh"?"请选择或输入水箱容量":"Select or enter tank volume"}</span><span></span>`;
+    e.innerHTML=`<span style="color:var(--dim)">${lang==="zh"?"先在上方填写「水箱容量」，即可开始配药 👆":"Start by filling in the tank volume above 👆"}</span><span></span>`;
     host.appendChild(e);
   }
 }
@@ -2625,12 +2625,11 @@ function renderGuide(){
   // QR code + link to share/open the app (inline SVG so it works offline)
   const qr=document.createElement("div"); qr.className="guide-qr";
   qr.innerHTML=`<div class="guide-qr-h">${esc(S.guideShareTitle)}</div>
-    <div class="guide-qr-img"><svg viewBox="0 0 37 37" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" width="176" height="176" role="img" aria-label="QR code"><rect width="37" height="37" fill="#ffffff"/><path d="M2 2h7v1h-7zM11 2h1v1h-1zM15 2h2v1h-2zM19 2h2v1h-2zM23 2h2v1h-2zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM10 3h3v1h-3zM14 3h1v1h-1zM18 3h1v1h-1zM20 3h1v1h-1zM22 3h3v1h-3zM26 3h1v1h-1zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h2v1h-2zM14 4h1v1h-1zM16 4h1v1h-1zM18 4h1v1h-1zM22 4h3v1h-3zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h2v1h-2zM13 5h1v1h-1zM16 5h1v1h-1zM18 5h1v1h-1zM20 5h1v1h-1zM22 5h2v1h-2zM25 5h2v1h-2zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM11 6h2v1h-2zM15 6h4v1h-4zM22 6h2v1h-2zM25 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM11 7h2v1h-2zM14 7h1v1h-1zM17 7h1v1h-1zM21 7h1v1h-1zM24 7h1v1h-1zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h1v1h-1zM12 9h1v1h-1zM16 9h3v1h-3zM21 9h2v1h-2zM24 9h2v1h-2zM2 10h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM15 10h2v1h-2zM19 10h1v1h-1zM21 10h1v1h-1zM24 10h5v1h-5zM31 10h3v1h-3zM2 11h2v1h-2zM6 11h2v1h-2zM9 11h2v1h-2zM15 11h1v1h-1zM17 11h1v1h-1zM19 11h3v1h-3zM23 11h1v1h-1zM25 11h1v1h-1zM30 11h3v1h-3zM4 12h2v1h-2zM7 12h2v1h-2zM10 12h1v1h-1zM14 12h4v1h-4zM19 12h1v1h-1zM22 12h3v1h-3zM26 12h1v1h-1zM30 12h1v1h-1zM32 12h2v1h-2zM5 13h1v1h-1zM9 13h2v1h-2zM13 13h1v1h-1zM15 13h1v1h-1zM17 13h6v1h-6zM25 13h1v1h-1zM27 13h7v1h-7zM2 14h1v1h-1zM5 14h4v1h-4zM11 14h2v1h-2zM14 14h2v1h-2zM19 14h1v1h-1zM21 14h1v1h-1zM26 14h1v1h-1zM28 14h2v1h-2zM34 14h1v1h-1zM3 15h1v1h-1zM5 15h1v1h-1zM9 15h2v1h-2zM12 15h3v1h-3zM19 15h2v1h-2zM23 15h1v1h-1zM25 15h1v1h-1zM28 15h2v1h-2zM32 15h3v1h-3zM2 16h2v1h-2zM6 16h1v1h-1zM8 16h2v1h-2zM11 16h1v1h-1zM13 16h6v1h-6zM22 16h2v1h-2zM26 16h3v1h-3zM30 16h1v1h-1zM33 16h1v1h-1zM2 17h2v1h-2zM6 17h2v1h-2zM11 17h1v1h-1zM18 17h1v1h-1zM20 17h1v1h-1zM22 17h1v1h-1zM27 17h1v1h-1zM29 17h1v1h-1zM32 17h1v1h-1zM34 17h1v1h-1zM4 18h3v1h-3zM8 18h1v1h-1zM14 18h1v1h-1zM16 18h2v1h-2zM19 18h1v1h-1zM22 18h1v1h-1zM24 18h4v1h-4zM29 18h2v1h-2zM34 18h1v1h-1zM4 19h2v1h-2zM12 19h1v1h-1zM14 19h4v1h-4zM20 19h3v1h-3zM24 19h2v1h-2zM27 19h2v1h-2zM31 19h4v1h-4zM3 20h2v1h-2zM7 20h2v1h-2zM14 20h4v1h-4zM19 20h3v1h-3zM23 20h3v1h-3zM27 20h1v1h-1zM29 20h1v1h-1zM31 20h2v1h-2zM34 20h1v1h-1zM2 21h1v1h-1zM5 21h3v1h-3zM9 21h1v1h-1zM11 21h1v1h-1zM15 21h1v1h-1zM17 21h2v1h-2zM21 21h1v1h-1zM24 21h1v1h-1zM26 21h1v1h-1zM30 21h3v1h-3zM4 22h1v1h-1zM8 22h1v1h-1zM14 22h1v1h-1zM16 22h2v1h-2zM20 22h1v1h-1zM24 22h1v1h-1zM26 22h2v1h-2zM29 22h3v1h-3zM34 22h1v1h-1zM2 23h2v1h-2zM5 23h2v1h-2zM14 23h2v1h-2zM24 23h2v1h-2zM30 23h2v1h-2zM2 24h1v1h-1zM4 24h2v1h-2zM8 24h1v1h-1zM10 24h1v1h-1zM12 24h2v1h-2zM15 24h2v1h-2zM21 24h1v1h-1zM24 24h1v1h-1zM30 24h1v1h-1zM33 24h1v1h-1zM2 25h1v1h-1zM4 25h2v1h-2zM7 25h1v1h-1zM9 25h1v1h-1zM13 25h1v1h-1zM17 25h2v1h-2zM21 25h2v1h-2zM24 25h1v1h-1zM27 25h7v1h-7zM2 26h7v1h-7zM10 26h6v1h-6zM18 26h1v1h-1zM26 26h6v1h-6zM33 26h2v1h-2zM10 27h1v1h-1zM15 27h1v1h-1zM17 27h6v1h-6zM26 27h1v1h-1zM30 27h1v1h-1zM32 27h1v1h-1zM34 27h1v1h-1zM2 28h7v1h-7zM11 28h1v1h-1zM13 28h1v1h-1zM15 28h1v1h-1zM17 28h1v1h-1zM19 28h1v1h-1zM22 28h1v1h-1zM25 28h2v1h-2zM28 28h1v1h-1zM30 28h1v1h-1zM32 28h2v1h-2zM2 29h1v1h-1zM8 29h1v1h-1zM11 29h2v1h-2zM15 29h1v1h-1zM17 29h1v1h-1zM19 29h3v1h-3zM24 29h3v1h-3zM30 29h3v1h-3zM34 29h1v1h-1zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM11 30h1v1h-1zM13 30h2v1h-2zM16 30h1v1h-1zM18 30h1v1h-1zM21 30h1v1h-1zM26 30h6v1h-6zM33 30h1v1h-1zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM12 31h1v1h-1zM16 31h1v1h-1zM19 31h2v1h-2zM23 31h1v1h-1zM26 31h2v1h-2zM29 31h2v1h-2zM33 31h2v1h-2zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM11 32h2v1h-2zM14 32h2v1h-2zM17 32h1v1h-1zM21 32h1v1h-1zM26 32h1v1h-1zM29 32h2v1h-2zM32 32h3v1h-3zM2 33h1v1h-1zM8 33h1v1h-1zM13 33h1v1h-1zM15 33h1v1h-1zM21 33h2v1h-2zM24 33h1v1h-1zM27 33h1v1h-1zM29 33h4v1h-4zM2 34h7v1h-7zM10 34h1v1h-1zM12 34h4v1h-4zM17 34h1v1h-1zM19 34h1v1h-1zM21 34h1v1h-1zM24 34h4v1h-4zM29 34h1v1h-1zM33 34h1v1h-1z" fill="#137a4a"/></svg></div>
+    <div class="guide-qr-brand">ChemLog Lab · 农药记录管理</div>
+    <div class="guide-qr-img"><svg viewBox="0 0 37 37" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" width="210" height="210" role="img" aria-label="QR code"><rect width="37" height="37" fill="#ffffff"/><path d="M2 2h7v1h-7zM11 2h1v1h-1zM15 2h2v1h-2zM19 2h2v1h-2zM23 2h2v1h-2zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM10 3h3v1h-3zM14 3h1v1h-1zM18 3h1v1h-1zM20 3h1v1h-1zM22 3h3v1h-3zM26 3h1v1h-1zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h2v1h-2zM14 4h1v1h-1zM16 4h1v1h-1zM18 4h1v1h-1zM22 4h3v1h-3zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h2v1h-2zM13 5h1v1h-1zM16 5h1v1h-1zM18 5h1v1h-1zM20 5h1v1h-1zM22 5h2v1h-2zM25 5h2v1h-2zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM11 6h2v1h-2zM15 6h4v1h-4zM22 6h2v1h-2zM25 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM11 7h2v1h-2zM14 7h1v1h-1zM17 7h1v1h-1zM21 7h1v1h-1zM24 7h1v1h-1zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h1v1h-1zM12 9h1v1h-1zM16 9h3v1h-3zM21 9h2v1h-2zM24 9h2v1h-2zM2 10h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM15 10h2v1h-2zM19 10h1v1h-1zM21 10h1v1h-1zM24 10h5v1h-5zM31 10h3v1h-3zM2 11h2v1h-2zM6 11h2v1h-2zM9 11h2v1h-2zM15 11h1v1h-1zM17 11h1v1h-1zM19 11h3v1h-3zM23 11h1v1h-1zM25 11h1v1h-1zM30 11h3v1h-3zM4 12h2v1h-2zM7 12h2v1h-2zM10 12h1v1h-1zM14 12h4v1h-4zM19 12h1v1h-1zM22 12h3v1h-3zM26 12h1v1h-1zM30 12h1v1h-1zM32 12h2v1h-2zM5 13h1v1h-1zM9 13h2v1h-2zM13 13h1v1h-1zM15 13h1v1h-1zM17 13h6v1h-6zM25 13h1v1h-1zM27 13h7v1h-7zM2 14h1v1h-1zM5 14h4v1h-4zM11 14h2v1h-2zM14 14h2v1h-2zM19 14h1v1h-1zM21 14h1v1h-1zM26 14h1v1h-1zM28 14h2v1h-2zM34 14h1v1h-1zM3 15h1v1h-1zM5 15h1v1h-1zM9 15h2v1h-2zM12 15h3v1h-3zM19 15h2v1h-2zM23 15h1v1h-1zM25 15h1v1h-1zM28 15h2v1h-2zM32 15h3v1h-3zM2 16h2v1h-2zM6 16h1v1h-1zM8 16h2v1h-2zM11 16h1v1h-1zM13 16h6v1h-6zM22 16h2v1h-2zM26 16h3v1h-3zM30 16h1v1h-1zM33 16h1v1h-1zM2 17h2v1h-2zM6 17h2v1h-2zM11 17h1v1h-1zM18 17h1v1h-1zM20 17h1v1h-1zM22 17h1v1h-1zM27 17h1v1h-1zM29 17h1v1h-1zM32 17h1v1h-1zM34 17h1v1h-1zM4 18h3v1h-3zM8 18h1v1h-1zM14 18h1v1h-1zM16 18h2v1h-2zM19 18h1v1h-1zM22 18h1v1h-1zM24 18h4v1h-4zM29 18h2v1h-2zM34 18h1v1h-1zM4 19h2v1h-2zM12 19h1v1h-1zM14 19h4v1h-4zM20 19h3v1h-3zM24 19h2v1h-2zM27 19h2v1h-2zM31 19h4v1h-4zM3 20h2v1h-2zM7 20h2v1h-2zM14 20h4v1h-4zM19 20h3v1h-3zM23 20h3v1h-3zM27 20h1v1h-1zM29 20h1v1h-1zM31 20h2v1h-2zM34 20h1v1h-1zM2 21h1v1h-1zM5 21h3v1h-3zM9 21h1v1h-1zM11 21h1v1h-1zM15 21h1v1h-1zM17 21h2v1h-2zM21 21h1v1h-1zM24 21h1v1h-1zM26 21h1v1h-1zM30 21h3v1h-3zM4 22h1v1h-1zM8 22h1v1h-1zM14 22h1v1h-1zM16 22h2v1h-2zM20 22h1v1h-1zM24 22h1v1h-1zM26 22h2v1h-2zM29 22h3v1h-3zM34 22h1v1h-1zM2 23h2v1h-2zM5 23h2v1h-2zM14 23h2v1h-2zM24 23h2v1h-2zM30 23h2v1h-2zM2 24h1v1h-1zM4 24h2v1h-2zM8 24h1v1h-1zM10 24h1v1h-1zM12 24h2v1h-2zM15 24h2v1h-2zM21 24h1v1h-1zM24 24h1v1h-1zM30 24h1v1h-1zM33 24h1v1h-1zM2 25h1v1h-1zM4 25h2v1h-2zM7 25h1v1h-1zM9 25h1v1h-1zM13 25h1v1h-1zM17 25h2v1h-2zM21 25h2v1h-2zM24 25h1v1h-1zM27 25h7v1h-7zM2 26h7v1h-7zM10 26h6v1h-6zM18 26h1v1h-1zM26 26h6v1h-6zM33 26h2v1h-2zM10 27h1v1h-1zM15 27h1v1h-1zM17 27h6v1h-6zM26 27h1v1h-1zM30 27h1v1h-1zM32 27h1v1h-1zM34 27h1v1h-1zM2 28h7v1h-7zM11 28h1v1h-1zM13 28h1v1h-1zM15 28h1v1h-1zM17 28h1v1h-1zM19 28h1v1h-1zM22 28h1v1h-1zM25 28h2v1h-2zM28 28h1v1h-1zM30 28h1v1h-1zM32 28h2v1h-2zM2 29h1v1h-1zM8 29h1v1h-1zM11 29h2v1h-2zM15 29h1v1h-1zM17 29h1v1h-1zM19 29h3v1h-3zM24 29h3v1h-3zM30 29h3v1h-3zM34 29h1v1h-1zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM11 30h1v1h-1zM13 30h2v1h-2zM16 30h1v1h-1zM18 30h1v1h-1zM21 30h1v1h-1zM26 30h6v1h-6zM33 30h1v1h-1zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM12 31h1v1h-1zM16 31h1v1h-1zM19 31h2v1h-2zM23 31h1v1h-1zM26 31h2v1h-2zM29 31h2v1h-2zM33 31h2v1h-2zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM11 32h2v1h-2zM14 32h2v1h-2zM17 32h1v1h-1zM21 32h1v1h-1zM26 32h1v1h-1zM29 32h2v1h-2zM32 32h3v1h-3zM2 33h1v1h-1zM8 33h1v1h-1zM13 33h1v1h-1zM15 33h1v1h-1zM21 33h2v1h-2zM24 33h1v1h-1zM27 33h1v1h-1zM29 33h4v1h-4zM2 34h7v1h-7zM10 34h1v1h-1zM12 34h4v1h-4zM17 34h1v1h-1zM19 34h1v1h-1zM21 34h1v1h-1zM24 34h4v1h-4zM29 34h1v1h-1zM33 34h1v1h-1z" fill="#137a4a"/></svg></div>
     <div class="guide-qr-sub">${esc(S.guideShareSub)}</div>
     <a class="guide-qr-link" href="https://stanleywoosweeleong.github.io/chemloglab/" target="_blank" rel="noopener">https://stanleywoosweeleong.github.io/chemloglab/</a>`;
   host.appendChild(qr);
-  const foot=document.createElement("div"); foot.className="guide-foot"; foot.textContent=S.guideFoot;
-  host.appendChild(foot);
 }
 
 function renderCostReport(){
