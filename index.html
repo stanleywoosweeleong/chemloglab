@@ -497,7 +497,7 @@ header{
 
 <div class="vol-lbl" id="t-tank">水箱容量</div>
 <div class="tank-in">
-  <input type="text" id="customVol" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" aria-labelledby="t-tank">
+  <input type="text" id="customVol" name="tankVolume" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" aria-labelledby="t-tank" aria-label="水箱容量 Tank volume">
   <span>L</span>
 </div>
 
@@ -579,7 +579,7 @@ header{
     <div class="modal-h" id="t-logTitle">记录喷洒</div>
     <div class="log-body">
       <label class="log-lab" id="t-logWhen" for="logWhen">日期与时间</label>
-      <input class="log-in" id="logWhen" type="datetime-local">
+      <input class="log-in" id="logWhen" name="logWhen" type="datetime-local" aria-label="日期与时间 Date and time">
 
       <label class="log-lab"><span id="t-logTargets">喷洒位置</span> <span class="log-req">*</span></label>
       <div id="logTargetList"></div>
@@ -1259,7 +1259,7 @@ function renderText(){
   const S=STR[lang];
   document.documentElement.lang = lang==="zh"?"zh":"en";
   $("#t-title").textContent=S.title;
-  $("#t-tank").textContent=S.tank; $("#t-chems").textContent=S.chems;
+  $("#t-tank").textContent=S.tank; $("#customVol").setAttribute("aria-label", S.tank); $("#t-chems").textContent=S.chems;
   $("#t-add").textContent=S.add; $("#t-recipe").textContent=S.recipe;
   $("#langBtn").textContent=S.lang;
   $("#t-share").textContent=S.share; $("#resetBtn").textContent=S.reset;
@@ -1738,7 +1738,7 @@ $("#logCancel").onclick=()=>{ $("#logSheet").hidden=true; logDraft=null; };
 $("#logSheet").onclick=e=>{ if(e.target===$("#logSheet")){ $("#logSheet").hidden=true; logDraft=null; } };
 function renderLogSheet(){
   const S=STR[lang];
-  $("#t-logTitle").textContent=S.logTitle; $("#t-logWhen").textContent=S.logWhen;
+  $("#t-logTitle").textContent=S.logTitle; $("#t-logWhen").textContent=S.logWhen; $("#logWhen").setAttribute("aria-label", S.logWhen);
   $("#t-logTargets").textContent=S.logTargets; $("#t-logWorkers").textContent=S.logWorkers;
   $("#t-logMix").textContent=S.logMix; $("#logAddTarget").textContent="＋ "+S.logAddTarget;
   $("#logCancel").textContent=S.cancel; $("#logSave").textContent=S.logSave;
