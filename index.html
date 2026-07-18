@@ -1,0 +1,2155 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#137a4a">
+<meta name="description" content="Bilingual agrochemical tank-mix calculator and spray-application logger. Works offline.">
+<title>农药记录 · ChemLogger</title>
+
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.webmanifest">
+
+<!-- icons -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f2419'/%3E%3Crect x='41' y='12' width='18' height='9' rx='2.5' fill='%237fd4a8'/%3E%3Crect x='44.5' y='20' width='11' height='8' fill='none' stroke='%237fd4a8' stroke-width='4'/%3E%3Cpath d='M44.5 27C44.5 33 34 36 34 46L34 76a6 6 0 0 0 6 6l20 0a6 6 0 0 0 6-6L66 46C66 36 55.5 33 55.5 27Z' fill='none' stroke='%237fd4a8' stroke-width='4.5' stroke-linejoin='round'/%3E%3Cpath d='M35.6 58L64.4 58L64.4 76a5 5 0 0 1-5 5l-18.8 0a5 5 0 0 1-5-5Z' fill='%233fa76a'/%3E%3Cpath d='M60 48h4M60 53h4' stroke='%237fd4a8' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+
+<!-- Apple iOS home-screen support -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ChemLogger">
+<style>
+:root{
+  --bg:#f4f6f2; --panel:#ffffff; --panel2:#eef2ea; --line:#c9d4c6;
+  --ink:#122117; --dim:#4a6152; --dim2:#6b8072;
+  --accent:#137a4a; --accent-ink:#ffffff; --amber:#9a6b00; --red:#b3261e;
+  --r:14px; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans CJK SC",system-ui,sans-serif;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 20px) env(safe-area-inset-left);
+  line-height:1.45;
+}
+.wrap{max-width:680px;margin:0 auto;padding:0 16px}
+header{
+  padding:18px 0 12px; position:sticky; top:0; z-index:20;
+  background:linear-gradient(180deg,var(--bg) 72%,transparent);
+}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.brand h1{font-size:19px;margin:0;letter-spacing:.2px;font-weight:650}
+.lang{
+  border:1px solid var(--line);background:var(--panel);color:var(--dim);
+  border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;cursor:pointer;
+}
+.lang:active{transform:scale(.96)}
+.hbtns{display:flex;align-items:center;gap:8px}
+.icon-btn{border:1px solid var(--line);background:var(--panel);color:var(--dim);
+  width:38px;height:38px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex:none}
+.icon-btn:active{transform:scale(.94)}
+
+/* full-screen settings panel */
+.panel{position:fixed;inset:0;z-index:90;background:var(--bg);overflow-y:auto;
+  padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 24px);
+  animation:panelIn .2s ease}
+@keyframes panelIn{from{transform:translateX(6%);opacity:.4}to{transform:translateX(0);opacity:1}}
+.panel-head{display:flex;align-items:center;gap:10px;padding:14px 16px;position:sticky;top:0;
+  background:var(--bg);border-bottom:1px solid var(--line);z-index:2}
+.panel-head h2{margin:0;font-size:18px;font-weight:650;flex:1}
+.panel-body{max-width:680px;margin:0 auto;padding:16px}
+.setting-sec{margin-bottom:26px}
+.sec-h{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1.4px;
+  font-weight:700;margin-bottom:10px}
+.add-row{display:flex;gap:8px;margin-bottom:10px}
+.ent-add{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:11px;padding:13px 13px;font-size:16px}
+.ent-add:focus{outline:none;border-color:var(--accent)}
+.ent-addbtn{flex:none;width:50px;border:1px solid var(--accent);background:var(--accent);color:#fff;
+  border-radius:11px;font-size:24px;font-weight:600;cursor:pointer;min-height:48px}
+.ent-addbtn:active{transform:scale(.96)}
+.ent-list{display:flex;flex-direction:column;gap:8px}
+.ent-row{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);
+  border-radius:11px;padding:4px 4px 4px 13px;box-shadow:0 1px 2px rgba(18,33,23,.04)}
+.ent-name{flex:1;min-width:0;background:transparent;border:none;color:var(--ink);
+  font-size:16px;font-weight:500;padding:11px 0}
+.ent-name:focus{outline:none}
+.ent-del{flex:none;border:1px solid var(--line);background:transparent;color:var(--dim);
+  width:42px;height:42px;border-radius:10px;font-size:16px;cursor:pointer}
+.ent-del:active{background:var(--panel2)}
+.ent-empty{color:var(--dim2);font-size:13px;padding:6px 2px}
+/* worker sid + name + import */
+.import-btn{border:1px solid var(--accent);background:transparent;color:var(--accent);
+  border-radius:8px;padding:6px 12px;font-size:12px;font-weight:650;cursor:pointer;text-transform:none;letter-spacing:0}
+.import-btn:active{background:rgba(19,122,74,.08)}
+.import-hint{font-size:12px;margin:2px 2px 8px;min-height:15px;line-height:1.4}
+.import-hint.ok{color:var(--accent)}.import-hint.err{color:var(--red)}
+.import-fmt{font-size:11px;color:var(--dim2);margin:0 2px 8px;line-height:1.4}
+.worker-add{display:flex;gap:8px;margin-bottom:4px}
+.w-sid{width:6.5em;min-width:6.5em;flex:none;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:11px;padding:13px 12px;font-size:16px;font-family:var(--mono);text-align:center;text-transform:uppercase}
+.w-sid:focus{outline:none;border-color:var(--accent)}
+.w-sid.dupe{border-color:var(--red);background:rgba(179,38,30,.06)}
+.worker-row{gap:8px;padding-left:4px}
+.worker-row .w-sid{border-radius:8px;padding:11px 8px}
+/* trash */
+.trash-h{display:flex;align-items:center;justify-content:space-between}
+.trash-purgeall{border:1px solid var(--red);background:transparent;color:var(--red);
+  border-radius:8px;padding:6px 12px;font-size:12px;font-weight:650;cursor:pointer;text-transform:none;letter-spacing:0}
+.trash-purgeall:active{background:rgba(179,38,30,.08)}
+.trash-row{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);
+  border-radius:11px;padding:10px 10px 10px 13px;box-shadow:0 1px 2px rgba(18,33,23,.04)}
+.trash-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.trash-type{display:inline-block;align-self:flex-start;font-size:11px;font-weight:700;
+  padding:2px 8px;border-radius:999px;background:var(--panel2);color:var(--dim)}
+.ttype-farm{background:#e6f0e6;color:var(--accent)}
+.trash-label{font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trash-acts{display:flex;align-items:center;gap:7px;flex:none}
+.trash-restore{border:1px solid var(--accent);background:var(--accent);color:#fff;
+  border-radius:9px;padding:9px 14px;font-size:14px;font-weight:650;cursor:pointer;min-height:42px}
+.trash-restore:active{transform:scale(.96)}
+.trash-purge{flex:none;border:1px solid var(--line);background:transparent;color:var(--dim2);
+  width:42px;height:42px;border-radius:10px;font-size:16px;cursor:pointer}
+.trash-purge:active{background:var(--panel2)}
+/* farm card with nested zones */
+.farm-card{background:var(--panel);border:1px solid var(--line);border-radius:13px;
+  padding:8px;margin-bottom:9px;box-shadow:0 1px 2px rgba(18,33,23,.04)}
+.farm-row{border:none;box-shadow:none;background:transparent;padding:2px 2px 2px 9px}
+.farm-row .ent-name{font-size:16px;font-weight:650}
+.zones{margin:4px 4px 2px;padding-left:10px;border-left:2px solid var(--line)}
+.zone-toggle{display:flex;align-items:center;gap:10px;width:100%;background:transparent;
+  border:none;padding:12px 4px;cursor:pointer;color:var(--accent);font-size:15px;font-weight:700;text-align:left}
+.ztg-caret{flex:none;display:flex;align-items:center;justify-content:center;width:28px;height:28px;
+  transition:transform .15s ease}
+.ztg-caret svg{width:24px;height:24px}
+.zone-toggle.open .ztg-caret{transform:rotate(90deg)}
+.zone-rows{max-height:280px;overflow-y:auto;margin-bottom:2px}
+.zone-rows[hidden]{display:none}
+.zone-row{display:flex;flex-direction:column;gap:4px;padding:7px 0}
+.zone-main{display:flex;align-items:center;gap:8px}
+.zone-caret{flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  background:transparent;border:none;color:var(--accent);cursor:pointer;padding:0}
+.zone-caret svg{width:22px;height:22px;transition:transform .15s}
+.zone-caret.open svg{transform:rotate(90deg)}
+.zone-name{width:100%;background:transparent;border:none;color:var(--ink);font-size:16px;font-weight:600;padding:2px 0}
+.zone-name:focus{outline:none;border-bottom:1px solid var(--accent)}
+.zone-idblock{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.zone-sum{font-size:12px;color:var(--dim2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zone-detail{margin-top:2px}
+.zone-del{flex:none;border:1px solid var(--line);background:transparent;color:var(--dim2);
+  width:42px;height:42px;border-radius:10px;font-size:16px;cursor:pointer}
+.zone-trees{display:flex;align-items:center;gap:8px;padding-left:14px;flex-wrap:wrap}
+.zt-lab{font-size:14px;color:var(--dim2);flex:none}
+.zt-from,.zt-to{width:3.8em;min-width:3.8em;text-align:center;background:var(--panel2);
+  border:1px solid var(--line);border-radius:9px;padding:11px 6px;font-size:16px;font-family:var(--mono);color:var(--ink)}
+.zt-from:focus,.zt-to:focus{outline:none;border-color:var(--accent)}
+.zt-dash{color:var(--dim2);font-size:15px}
+.zt-count{font-size:14px;color:var(--accent);font-weight:600;margin-left:2px}
+.zt-count.err{color:var(--red)}
+.rows-toggle{display:flex;align-items:center;gap:5px;font-size:14px;color:var(--dim);
+  font-weight:600;flex:none;cursor:pointer;white-space:nowrap;padding:6px 2px}
+.rows-toggle input{accent-color:var(--accent);width:20px;height:20px}
+.rows-sec{padding-left:13px;margin-top:4px}
+.rows-total{font-size:13px;color:var(--accent);font-weight:650;margin-bottom:7px}
+.row-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;margin-bottom:8px}
+.row-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+.row-name{width:4.4em;min-width:4.4em;flex:none;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:10px 6px;font-size:16px;font-weight:650;color:var(--ink);text-align:center}
+.row-name:focus{outline:none;border-color:var(--accent)}
+.rt-from,.rt-to{width:3.8em;min-width:3.8em;flex:none;text-align:center;background:var(--panel);
+  border:1px solid var(--line);border-radius:8px;padding:11px 6px;font-size:16px;font-family:var(--mono);color:var(--ink)}
+.rt-from:focus,.rt-to:focus{outline:none;border-color:var(--accent)}
+.rt-count{font-size:14px;color:var(--accent);font-weight:600;flex:1;min-width:60px}
+.rt-count.err{color:var(--red)}
+.row-del{flex:none;margin-left:auto;border:1px solid var(--line);background:transparent;color:var(--dim2);
+  width:42px;height:42px;border-radius:10px;font-size:16px;cursor:pointer}
+.row-gen-row{display:flex;gap:8px}
+.row-add-row{display:flex;gap:8px;margin-bottom:8px}
+.row-add{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:12px 12px;font-size:15px}
+.row-add:focus{outline:none;border-color:var(--accent)}
+.row-addbtn{flex:none;width:46px;border:1px solid var(--line);background:var(--panel2);color:var(--accent);
+  border-radius:10px;font-size:20px;font-weight:600;cursor:pointer}
+.row-addbtn:active{transform:scale(.95)}
+.row-gen{flex:1;min-width:0;background:var(--panel);border:1px dashed var(--line);color:var(--ink);
+  border-radius:10px;padding:12px 12px;font-size:14px}
+.row-gen:focus{outline:none;border-color:var(--accent)}
+.row-genbtn{flex:none;border:1px solid var(--accent);background:transparent;color:var(--accent);
+  border-radius:10px;padding:0 16px;font-size:14px;font-weight:650;cursor:pointer;min-height:46px}
+.row-gen-hint{font-size:12px;margin:5px 2px 0;min-height:15px;line-height:1.3}
+.row-gen-hint.ok{color:var(--accent)}.row-gen-hint.err{color:var(--red)}
+.zone-empty{color:var(--dim2);font-size:13px;padding:6px 0 7px}
+.zone-add-row{display:flex;gap:8px;margin-top:6px}
+.zone-add{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:12px 12px;font-size:15px}
+.zone-add:focus{outline:none;border-color:var(--accent)}
+.zone-addbtn{flex:none;width:46px;border:1px solid var(--line);background:var(--panel2);color:var(--accent);
+  border-radius:10px;font-size:22px;font-weight:600;cursor:pointer;min-height:46px}
+.zone-addbtn:active{transform:scale(.95)}
+.zone-gen-row{display:flex;gap:8px;margin-top:7px}
+.zone-gen{flex:1;min-width:0;background:var(--panel);border:1px dashed var(--line);color:var(--ink);
+  border-radius:10px;padding:12px 12px;font-size:14px}
+.zone-gen:focus{outline:none;border-color:var(--accent)}
+.zone-genbtn{flex:none;border:1px solid var(--accent);background:transparent;color:var(--accent);
+  border-radius:10px;padding:0 16px;font-size:14px;font-weight:650;cursor:pointer;white-space:nowrap;min-height:46px}
+.zone-genbtn:active{transform:scale(.96)}
+.zone-gen-hint{font-size:12px;margin:5px 2px 0;min-height:15px;line-height:1.4}
+.zone-gen-hint.ok{color:var(--accent)}
+.zone-gen-hint.err{color:var(--red)}
+
+/* tank capacity */
+.vol-lbl{font-size:12px;color:var(--dim);letter-spacing:1.4px;margin:16px 0 8px;font-weight:700}
+.tank-in{display:flex;gap:10px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px 16px 6px 6px;box-shadow:0 1px 2px rgba(18,33,23,.05)}
+.tank-in input{
+  flex:1;min-width:0;background:transparent;border:none;color:var(--ink);
+  border-radius:10px;padding:14px 12px;font-size:26px;font-weight:700;
+  font-family:var(--mono);width:100%;
+}
+.tank-in input:focus{outline:none}
+.tank-in span{color:var(--dim);font-size:18px;font-weight:700;flex:none}
+
+/* chemical cards */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:22px 0 10px}
+.section-head h2{font-size:15px;margin:0;font-weight:650}
+.count{color:var(--dim);font-size:12px;font-family:var(--mono)}
+.chem{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:13px;margin-bottom:10px;box-shadow:0 1px 2px rgba(18,33,23,.05);
+}
+.chem-top{display:flex;gap:9px;align-items:center;margin-bottom:11px}
+.chem-name{
+  flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:10px 12px;font-size:15px;font-weight:600;
+}
+.chem-name::placeholder{color:var(--dim2);font-weight:400}
+.del{
+  border:1px solid var(--line);background:transparent;color:var(--dim);
+  width:38px;height:38px;border-radius:10px;font-size:18px;cursor:pointer;flex:none;
+}
+.del:active{background:var(--panel2)}
+/* packaging row */
+.pack-row{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.pack-lab{font-size:13px;color:var(--dim);font-weight:600;flex:none}
+.pack-in{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:9px 12px;font-size:14px;font-family:var(--mono)}
+.pack-in::placeholder{color:var(--dim2);font-weight:400;font-family:-apple-system,system-ui,sans-serif;font-size:12px}
+.pack-in:focus{outline:none;border-color:var(--accent)}
+.result .packs{display:block;text-align:right;font-size:14px;color:var(--ink);margin-top:5px;font-weight:600}
+.result .packs b{color:var(--accent);font-family:var(--mono);font-size:16px}
+.pack-warn{color:var(--red);font-size:12px;font-weight:600}
+.need-pack{color:var(--amber);font-size:14px;font-weight:600;font-family:-apple-system,system-ui,sans-serif}
+/* liquid/powder + mode segments */
+.seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);
+  border-radius:10px;padding:3px;gap:2px;flex:none}
+.seg button{border:none;background:transparent;color:var(--dim);font-weight:700;
+  font-size:14px;padding:9px 14px;border-radius:7px;font-family:inherit;cursor:pointer;white-space:nowrap}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.seg button:active{transform:scale(.97)}
+.type-seg{margin-bottom:9px}
+.mode-seg{display:flex;width:100%;margin-bottom:9px}
+.mode-seg button{flex:1 1 0;min-width:0;padding:11px 8px;font-size:14px;font-weight:600;text-align:center;
+  background:transparent;color:var(--dim);border:1.5px solid transparent}
+.mode-seg button.on{background:var(--panel);color:var(--accent);
+  border:1.5px solid var(--accent);box-shadow:0 1px 2px rgba(18,33,23,.06)}
+
+/* rate line: [amount] [g|kg] per [N] L  — reads like the label */
+.rate-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.rate-line:focus-within{border-color:var(--accent)}
+.rate-line.locked{opacity:.55}
+.rate-in.amt{flex:0 1 4.5em;min-width:3.5em;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:11px 8px;font-size:18px;font-weight:700;font-family:var(--mono);text-align:center;color:var(--ink)}
+.rate-in.amt:focus{outline:none;border-color:var(--accent)}
+.unit-seg{display:flex;flex:none;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.unit-btn{border:none;background:transparent;color:var(--dim);padding:11px 12px;font-size:15px;font-weight:650;
+  font-family:var(--mono);cursor:pointer;border-right:1px solid var(--line)}
+.unit-btn:last-child{border-right:none}
+.unit-btn.on{background:var(--accent);color:#fff}
+.rate-per{color:var(--dim);font-size:14px;flex:none}
+.basis-in{flex:0 1 4em;min-width:3em;text-align:center;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:11px 8px;font-size:18px;font-weight:700;font-family:var(--mono);color:var(--ink)}
+.basis-in:focus{outline:none;border-color:var(--accent)}
+.rate-perL{color:var(--dim);font-size:15px;font-weight:650;font-family:var(--mono);flex:none}
+
+.rate-wrap{display:flex;align-items:center;
+  background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+.rate-wrap:focus-within{border-color:var(--accent)}
+.rate-in{
+  flex:1;min-width:0;background:transparent;border:none;color:var(--ink);
+  border-radius:10px;padding:13px 14px;font-size:18px;font-weight:600;font-family:var(--mono);width:100%;
+}
+.rate-in:focus{outline:none}
+.rate-pre{color:var(--dim);font-size:18px;font-weight:700;font-family:var(--mono);padding:0 2px 0 12px;flex:none}
+.rate-in.ratio{padding-left:6px}
+.chem-name:focus,.tank-in:focus-within{outline:none;border-color:var(--accent)}
+.rate-wrap.locked{opacity:.55}
+.rate-in:disabled{cursor:not-allowed;color:var(--dim2)}
+.result{
+  margin-top:11px;padding:12px 14px;background:var(--panel2);border-radius:10px;
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  border:1px dashed var(--line);
+}
+.result .lab{font-size:12px;color:var(--dim)}
+.result .val{font-size:27px;font-weight:800;font-family:var(--mono);color:var(--accent);line-height:1}
+.result .val small{font-size:15px;font-weight:700}
+.result .val.warn{color:var(--amber)}
+.result .val.bad{color:var(--red)}
+.result .sub{font-size:11px;color:var(--dim2);display:block;text-align:right;font-family:var(--mono);margin-top:4px}
+
+.add{
+  width:100%;border:1px dashed var(--line);background:transparent;color:var(--accent);
+  border-radius:var(--r);padding:14px;font-size:15px;font-weight:600;cursor:pointer;margin-top:2px;
+}
+.add:active{background:var(--panel)}
+
+/* summary */
+.summary{
+  background:linear-gradient(160deg,#e6f0e6,#ffffff);
+  border:1px solid #b5c8b3;border-radius:var(--r);padding:16px;margin-top:20px;
+  box-shadow:0 1px 3px rgba(18,33,23,.06);
+}
+.summary h3{margin:0 0 12px;font-size:14px;font-weight:650;display:flex;justify-content:space-between}
+.summary h3 span{color:var(--dim);font-family:var(--mono);font-weight:600}
+.srow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.srow:last-of-type{border-bottom:none}
+.srow .q{font-family:var(--mono);font-weight:700}
+.srow.water .q{color:var(--accent)}
+.srow.tot{margin-top:6px;padding-top:12px;border-top:1px solid var(--line);border-bottom:none;font-weight:600}
+.actions{display:flex;gap:8px;margin-top:14px}
+.actions button{
+  flex:1;border-radius:11px;padding:13px;font-size:14px;font-weight:650;cursor:pointer;border:1px solid var(--line);
+}
+.btn-share{background:#25D366;color:#fff;border-color:#25D366;
+  display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-share:active{background:#1EBE5A;border-color:#1EBE5A}
+.btn-reset{background:transparent;color:var(--dim)}
+.actions button:active{transform:scale(.98)}
+.err{color:var(--red);font-size:12px;margin-top:6px;display:none}
+.err.show{display:block}
+
+/* share preview modal */
+.modal-ov{position:fixed;inset:0;background:rgba(10,20,14,.55);z-index:100;
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));
+  animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{width:100%;max-width:560px;background:var(--panel);border:1px solid var(--line);
+  border-radius:18px;padding:16px;box-shadow:0 12px 40px rgba(10,20,14,.3);
+  animation:slideUp .2s ease}
+@keyframes slideUp{from{transform:translateY(16px);opacity:.6}to{transform:translateY(0);opacity:1}}
+.modal-h{font-size:15px;font-weight:650;color:var(--ink);margin-bottom:11px}
+.modal-ta{width:100%;min-height:190px;resize:vertical;background:var(--panel2);
+  border:1px solid var(--line);border-radius:12px;padding:13px;color:var(--ink);
+  font-size:14px;line-height:1.5;font-family:var(--mono);-webkit-appearance:none}
+.modal-ta:focus{outline:none;border-color:var(--accent)}
+.modal-btns{display:flex;gap:9px;margin-top:13px}
+.modal-btns button{flex:1;border-radius:12px;padding:14px;font-size:15px;font-weight:650;
+  cursor:pointer;border:1px solid var(--line)}
+.modal-cancel{background:transparent;color:var(--dim)}
+.modal-send{background:#25D366;color:#fff;border-color:#25D366;
+  display:flex;align-items:center;justify-content:center;gap:8px}
+.modal-send:active{background:#1EBE5A;border-color:#1EBE5A}
+.wa-ico{flex:none}
+.modal-btns button:active{transform:scale(.98)}
+/* confirm dialog */
+.modal-ov[hidden]{display:none!important}
+#confirmModal{align-items:center}
+.confirm-modal{max-width:400px}
+.confirm-modal .modal-h{font-size:15px;font-weight:600;line-height:1.5;margin-bottom:4px}
+.confirm-yes.danger{background:var(--red);border-color:var(--red);color:#fff}
+.confirm-yes.danger:active{background:#8f1e17;border-color:#8f1e17}
+
+/* log button + history on home */
+.log-actions{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+.btn-log{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:13px;
+  padding:16px;font-size:16px;font-weight:700;cursor:pointer}
+.btn-log:active{transform:scale(.98);background:#0f6a40}
+.btn-history{width:100%;background:var(--panel);color:var(--dim);border:1px solid var(--line);
+  border-radius:13px;padding:14px;font-size:15px;font-weight:650;cursor:pointer}
+.btn-history:active{background:var(--panel2)}
+
+/* log sheet */
+.modal-ov[hidden]{display:none!important}
+.log-modal{max-width:560px}
+.log-body{max-height:60vh;overflow-y:auto;padding:2px}
+.log-lab{display:block;font-size:13px;font-weight:700;color:var(--dim);margin:14px 2px 7px}
+.log-req{color:var(--red)}
+.log-in{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:11px;padding:13px 12px;font-size:16px}
+.log-in:focus{outline:none;border-color:var(--accent)}
+.log-empty{color:var(--dim2);font-size:13px;padding:5px 2px}
+.log-addtarget{width:100%;border:1px dashed var(--accent);background:transparent;color:var(--accent);
+  border-radius:11px;padding:12px;font-size:14px;font-weight:650;cursor:pointer;margin-top:8px}
+.log-addtarget:active{background:rgba(19,122,74,.06)}
+.target-chip{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.target-chip span{font-size:14px;color:var(--ink);word-break:break-word}
+.target-chip button{flex:none;border:none;background:transparent;color:var(--dim2);font-size:16px;cursor:pointer;padding:2px 6px}
+.chip-wrap{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--dim);border-radius:999px;
+  padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chip:active{transform:scale(.96)}
+.wk-selected{margin-bottom:9px}
+.wk-search{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:11px;padding:12px 13px;font-size:16px;margin-bottom:8px}
+.wk-search:focus{outline:none;border-color:var(--accent)}
+.wk-list{max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:11px;background:var(--panel)}
+.wk-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;
+  border:none;border-bottom:1px solid var(--line);padding:12px 13px;font-size:15px;color:var(--ink);cursor:pointer}
+.wk-item:last-child{border-bottom:none}
+.wk-item.on{background:rgba(19,122,74,.07);color:var(--accent);font-weight:650}
+.wk-item:active{background:var(--panel2)}
+.wk-check{flex:none;width:18px;color:var(--accent);font-weight:700}
+.log-mix{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+.log-mix .mix-tank{font-size:13px;color:var(--dim);font-weight:650;margin-bottom:5px}
+.log-mix .mix-line{font-size:14px;color:var(--ink);padding:2px 0}
+.log-save{background:var(--accent);border-color:var(--accent)}
+.log-save:active{background:#0f6a40;border-color:#0f6a40}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* target picker */
+.tp-farm{margin-bottom:14px}
+.tp-farm-h{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:7px}
+.tp-opt{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);
+  color:var(--ink);border-radius:10px;padding:12px 13px;font-size:15px;cursor:pointer;margin-bottom:6px}
+.tp-opt:active{background:var(--panel2)}
+.tp-farmopt{border-color:var(--accent);color:var(--accent);font-weight:650}
+.tp-zone{padding-left:12px;border-left:2px solid var(--line);margin-left:2px}
+.tp-row{font-size:14px;color:var(--dim);padding:10px 12px}
+.tp-crumb{display:flex;align-items:center;flex-wrap:wrap;gap:2px;margin:2px 2px 12px;font-size:13px}
+.crumb{background:transparent;border:none;color:var(--accent);font-weight:650;font-size:13px;cursor:pointer;padding:4px 4px}
+.crumb.cur{color:var(--ink);cursor:default}
+.crumb-sep{color:var(--dim2);font-size:13px}
+.tp-drill{display:flex;align-items:center;justify-content:space-between}
+.tp-drill::after{content:"›";color:var(--dim2);font-size:18px;font-weight:700;margin-left:8px}
+.tp-drillrow{display:flex;gap:8px;margin-bottom:6px}
+.tp-drillrow .tp-opt{flex:1;margin-bottom:0}
+.tp-into{flex:none;width:52px;text-align:center;font-size:20px;font-weight:700;color:var(--dim);
+  display:flex;align-items:center;justify-content:center}
+.tp-scope{font-size:14px;font-weight:650;color:var(--ink);margin:2px 2px 10px}
+.tp-hint{font-size:12px;color:var(--dim2);margin:8px 2px 4px}
+.tp-drill{display:flex;align-items:center;justify-content:space-between}
+.tp-drill::after{content:"›";color:var(--dim2);font-size:18px;font-weight:700;margin-left:8px}
+.tp-multi.on{border-color:var(--accent);background:rgba(19,122,74,.08);color:var(--accent);font-weight:650}
+.tp-mslist{max-height:44vh;overflow-y:auto}
+.tp-donebar{position:sticky;bottom:0;display:flex;align-items:center;gap:9px;
+  background:var(--panel);padding:10px 2px 2px;margin-top:8px;border-top:1px solid var(--line)}
+.tp-donecount{flex:1;font-size:13px;color:var(--dim);font-weight:600}
+.tp-back{flex:none;border:1px solid var(--line);background:transparent;color:var(--dim);
+  border-radius:10px;padding:11px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.tp-done{flex:none;border:1px solid var(--accent);background:var(--accent);color:#fff;
+  border-radius:10px;padding:11px 20px;font-size:15px;font-weight:700;cursor:pointer}
+.tp-done:active,.tp-back:active{transform:scale(.97)}
+.tp-trees{display:flex;align-items:center;gap:7px;padding:6px 12px 10px;flex-wrap:wrap}
+.tp-trees .zt-lab{font-size:13px;color:var(--dim2)}
+.tp-tf,.tp-tt{width:3.6em;min-width:3.6em;text-align:center;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:10px 5px;font-size:16px;font-family:var(--mono);color:var(--ink)}
+.tp-tf:focus,.tp-tt:focus{outline:none;border-color:var(--accent)}
+.tp-treebtn{flex:none;border:1px solid var(--accent);background:var(--accent);color:#fff;
+  border-radius:8px;width:42px;height:42px;font-size:20px;font-weight:600;cursor:pointer}
+.tp-treebtn:active{transform:scale(.95)}
+.tp-trees.bad .tp-tf,.tp-trees.bad .tp-tt{border-color:var(--red)}
+
+/* history */
+.hist-card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:11px;
+  box-shadow:0 1px 2px rgba(18,33,23,.04)}
+.hist-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.hist-when{font-size:15px;font-weight:700;color:var(--ink);font-family:var(--mono)}
+.hist-del{flex:none;border:1px solid var(--line);background:transparent;color:var(--dim2);width:38px;height:38px;border-radius:9px;font-size:15px;cursor:pointer}
+.hist-sec{font-size:14px;color:var(--ink);line-height:1.5;padding:4px 0;border-top:1px solid var(--line)}
+.hist-k{display:inline-block;font-size:12px;font-weight:700;color:var(--dim);margin-right:4px}
+.hist-sec .dim{color:var(--dim2)}
+.hist-export{text-transform:none;letter-spacing:0}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;font-weight:600;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:200;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="hrow">
+    <div class="brand">
+      <h1 id="t-title">农药记录</h1>
+    </div>
+    <div class="hbtns">
+      <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button class="lang" id="langBtn">EN</button>
+    </div>
+  </div>
+</header>
+
+<div class="vol-lbl" id="t-tank">水箱容量</div>
+<div class="tank-in">
+  <input type="text" id="customVol" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" aria-labelledby="t-tank">
+  <span>L</span>
+</div>
+
+<div class="section-head">
+  <h2 id="t-chems">药剂 · Chemicals</h2>
+  <span class="count" id="chemCount"></span>
+</div>
+<div id="chemList"></div>
+<button class="add" id="addBtn">＋ <span id="t-add">添加药剂</span></button>
+
+<div class="summary">
+  <h3><span id="t-recipe">配方总览</span></h3>
+  <div id="sumRows"></div>
+  <div class="actions">
+    <button class="btn-reset" id="resetBtn" data-zh="清空" data-en="Reset">清空</button>
+    <button class="btn-share" id="shareBtn">
+      <svg class="wa-ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.71.306 1.263.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.002-5.45 4.436-9.884 9.888-9.884a9.82 9.82 0 0 1 6.988 2.896 9.83 9.83 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.412-18.297A11.82 11.82 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.88 11.88 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.82 11.82 0 0 0-3.48-8.413"/></svg>
+      <span id="t-share">WhatsApp</span>
+    </button>
+  </div>
+</div>
+
+<div class="log-actions">
+  <button class="btn-log" id="logBtn">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    <span id="t-logBtn">记录喷洒</span>
+  </button>
+  <button class="btn-history" id="historyBtn"><span id="t-historyBtn">记录</span></button>
+</div>
+
+
+</div>
+
+<!-- full-screen settings panel -->
+<div class="panel" id="settingsPanel" hidden>
+  <div class="panel-head">
+    <button class="icon-btn" id="settingsBack" aria-label="Back">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h2 id="t-settings">设置</h2>
+  </div>
+  <div class="panel-body">
+    <div class="setting-sec">
+      <div class="sec-h" id="t-farmsH">农场</div>
+      <div class="add-row">
+        <input class="ent-add" id="farmAdd" type="text" placeholder="" aria-label="Add farm name">
+        <button class="ent-addbtn" id="farmAddBtn">＋</button>
+      </div>
+      <div class="ent-list" id="farmList"></div>
+    </div>
+    <div class="setting-sec">
+      <div class="sec-h trash-h">
+        <span id="t-workersH">工人</span>
+        <button class="import-btn" id="workerImport"></button>
+      </div>
+      <input type="file" id="workerFile" accept=".xlsx,.xls,.csv" aria-label="Import workers file" hidden>
+      <div class="worker-add">
+        <input class="w-sid" id="workerAddSid" type="text" placeholder="" aria-label="Staff ID">
+        <input class="ent-add" id="workerAdd" type="text" placeholder="" aria-label="Worker name">
+        <button class="ent-addbtn" id="workerAddBtn">＋</button>
+      </div>
+      <div class="import-hint" id="workerImportHint"></div>
+      <div class="import-fmt" id="workerFmt"></div>
+      <div class="ent-list" id="workerList"></div>
+    </div>
+    <div class="setting-sec">
+      <div class="sec-h trash-h">
+        <span id="t-trashH">回收站</span>
+        <button class="trash-purgeall" id="trashPurgeAll" hidden></button>
+      </div>
+      <div class="ent-list" id="trashList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Log spray event bottom sheet -->
+<div class="modal-ov" id="logSheet" hidden>
+  <div class="modal log-modal">
+    <div class="modal-h" id="t-logTitle">记录喷洒</div>
+    <div class="log-body">
+      <label class="log-lab" id="t-logWhen" for="logWhen">日期与时间</label>
+      <input class="log-in" id="logWhen" type="datetime-local">
+
+      <label class="log-lab"><span id="t-logTargets">喷洒位置</span> <span class="log-req">*</span></label>
+      <div id="logTargetList"></div>
+      <button class="log-addtarget" id="logAddTarget"></button>
+
+      <label class="log-lab"><span id="t-logWorkers">工人</span></label>
+      <div class="chip-wrap" id="logWorkerChips"></div>
+
+      <label class="log-lab" id="t-logMix">配方（快照）</label>
+      <div class="log-mix" id="logMixPreview"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-cancel" id="logCancel"></button>
+      <button class="modal-send log-save" id="logSave"></button>
+    </div>
+  </div>
+</div>
+
+<!-- reusable confirm dialog (reliable across browsers incl. iOS) -->
+<div class="modal-ov" id="confirmModal" hidden>
+  <div class="modal confirm-modal">
+    <div class="modal-h" id="confirmMsg"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" id="confirmNo"></button>
+      <button class="modal-send confirm-yes" id="confirmYes"></button>
+    </div>
+  </div>
+</div>
+
+<!-- add-target picker sub-sheet -->
+<div class="modal-ov" id="targetSheet" hidden>
+  <div class="modal">
+    <div class="modal-h" id="t-targetTitle">选择位置</div>
+    <div class="tp-crumb" id="targetCrumb"></div>
+    <div class="log-body" id="targetPicker"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" id="targetCancel"></button>
+    </div>
+  </div>
+</div>
+
+<!-- History full-screen panel -->
+<div class="panel" id="historyPanel" hidden>
+  <div class="panel-head">
+    <button class="icon-btn" id="historyBack" aria-label="Back">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h2 id="t-historyTitle">喷洒记录</h2>
+    <button class="import-btn hist-export" id="historyExport"></button>
+  </div>
+  <div class="panel-body" id="historyList"></div>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+const STR={
+  zh:{title:"农药记录",tank:"水箱容量",
+    chems:"药剂",add:"添加药剂",recipe:"配方总览",share:"WhatsApp",reset:"清空",
+    custom:"自定",name:"药剂名称（可选）",
+    mPer:"每升水",mPerShort:"/ L",mRatio:"稀释比",perA:"/",perB:"L",mRate:"用量",perWord:"兑",
+    ratePhNum:"输入数量（数字）",rateLocked:"请先填写包装",
+    perTank:"每桶用量",tankShort:"水箱",water:"清水",total:"配好总量",need:"需要",
+    packLab:"包装",packPh:"每包/瓶，例: 1kg、500g、1L、250ml",
+    packNeed:"需要",bagUnit:"包",bottleUnit:"瓶",packMismatch:"⚠ 包装单位与药剂不符（固/液）",
+    needPackMsg:"请先填写包装（固/液）",needBasisMsg:"请填写每几升",
+    fill:"加水至",
+    countTxt:n=>`${n} 种`,
+    shareTitle:"🌱 配药清单",
+    previewTitle:"预览讯息（可编辑）",cancel:"取消",sendWA:"WhatsApp",
+    settings:"设置",farms:"农场",farmPh:"输入农场名称",noFarms:"尚未添加农场",
+    workers:"工人",workerPh:"输入工人名称",noWorkers:"尚未添加工人",
+    sidPh:"工号",namePh:"姓名",importBtn:"导入 Excel",
+    ariaAmount:"用量数字",ariaBasis:"每几升",ariaTreeFrom:"起始树号",ariaTreeTo:"结束树号",
+    ariaZoneName:"区域名称",ariaRowName:"行名称",ariaRowGen:"添加行",ariaZoneGen:"添加区域",ariaFarmAdd:"添加农场名称",ariaFarmName:"农场名称",
+    importReading:"读取中…",importEmpty:"文件无有效数据",importFail:"导入失败，请检查文件格式",
+    importNoNet:"无法读取 Excel（需联网加载组件）。请改用 CSV，或联网后重试。",
+    importDone:(a,s)=>`已导入 ${a} 人${s?`，跳过 ${s} 个重复工号`:""}`,
+    importFmt:"两列：工号、姓名（支持 .xlsx / .csv；CSV 可离线导入）",
+    trash:"回收站",trashEmpty:"回收站为空",restore:"恢复",purgeAll:"清空回收站",
+    purgeConfirm:"永久删除此项？无法恢复。",purgeAllConfirm:"永久删除回收站所有项目？无法恢复。",
+    confirmDelete:"删除",purgeYes:"永久删除",goSettings:"前往设置",
+    trashType:{farm:"农场",zone:"区域",row:"行",worker:"工人"},
+    scopeFarm:(z,r)=>`含 ${z} 区域、${r} 行`,scopeZone:r=>`含 ${r} 行`,
+    zonePh:"输入区域名称",noZones:"尚未添加区域（可整个农场喷洒）",
+    zoneGenPh:"输入名称或范围，例: A、A-Z、1-50",zoneGenBtn:"生成",zoneAddBtn:"添加",
+    zoneAddOne:n=>`添加「${n}」`,zoneDupOne:n=>`「${n}」已存在`,
+    zoneGenPreview:(t,n)=>`将生成 ${t} 个，新增 ${n} 个`,
+    zoneGenBad:"格式无效，请用 A-Z、AA-ZZ 或 1-50",zoneGenTooBig:"数量过多（上限 2000）",
+    zonesCount:(n,t)=>`${n} 个区域 · 共 ${t} 棵`,
+    treesLab:"树",treesCount:n=>`共 ${n} 棵`,treesBad:"范围无效",
+    hasRows:"分行",noRows:"尚未添加行",rowPh:"输入行名称，例: C2",rowGenPh:n=>`输入名称或范围，例: ${n||"C"}1、${n||"C"}1-${n||"C"}20`,
+    rowsTotal:(r,t)=>`${r} 行 · 共 ${t} 棵`,
+    zoneSummaryRows:(r,t)=>`${r} 行 · ${t} 棵`,zoneNoTrees:"未设树数",
+    lang:"EN",
+    logBtnHome:"记录喷洒",historyBtnHome:"记录",
+    logTitle:"记录喷洒",logWhen:"日期与时间",logTargets:"喷洒位置",logWorkers:"工人",logMix:"配方（快照）",
+    logAddTarget:"添加位置",logSave:"保存记录",logSaved:"已保存",logNeedTarget:"请至少添加一个位置",
+    logNeedWorker:"请至少选择一位工人",logNoWorkerYet:"尚未添加工人",logAddWorkerPrompt:"记录喷洒前需先添加工人。现在前往设置添加？",
+    logNoTarget:"尚未添加位置",logNoWorkers:"尚未添加工人（请先到设置添加）",logMixEmpty:"当前无有效药剂",logNoFarms:"请先在设置中添加农场",
+    entireFarm:"整个农场",treeShort:"树",targetTitle:"选择位置",
+    zonePrefix:"区域 ",rowPrefix:"行 ",
+    crumbAll:"农场",tpPickFarm:"选择农场",tpPickLevel:"选择范围",
+    lvlFarm:"整个农场",lvlZones:"按区域选择 ›",lvlRows:"按行选择 ›",lvlTrees:"按树号选择 ›",
+    tpTapZones:"点选区域（可多选，再次点选取消）",tpTapRows:z=>`${z}：点选行（可多选）`,
+    tpPickZoneForRows:"选择区域",tpPickZoneForTrees:"选择区域",tpPickRowForTrees:z=>`${z}：选择行`,
+    tpNoZones:"此农场暂无区域",tpNoRows:"此区域暂无行",tpNoRowZones:"暂无含行的区域",
+    tpTreesIn:n=>`${n}：输入树号范围`,tpTreesHint:"单棵则起止相同，例 7；范围例 5–12",
+    tpChosen:n=>`已选 ${n} 项`,tpDone:"完成",tpBack:"返回",tpBackZones:"返回区域",tpSearchPh:"搜索…",
+    wkSearchPh:"搜索工号或姓名…",wkNoneSelected:"尚未选择工人",wkNoMatch:"无匹配工人",wkMore:n=>`还有 ${n} 位，请细化搜索`,
+    historyTitle:"喷洒记录",historyEmpty:"尚无记录",exportExcel:"导出 Excel",exportedCsv:"已导出 CSV",
+    histTargets:"位置：",histWorkers:"工人：",histMix:"配方：",histNoWorker:"（未指定）",histDelConfirm:"删除此记录？",
+    xlWhen:"日期时间",xlFarm:"农场",xlZone:"区域",xlRow:"行",xlTrees:"树",xlWorkers:"工人",xlChem:"药剂",xlPack:"包装",xlAmount:"用量",xlPacks:"包/瓶",xlTank:"水箱"},
+  en:{title:"ChemLogger",tank:"Tank Volume",
+    chems:"Chemicals",add:"Add chemical",recipe:"Mix summary",share:"WhatsApp",reset:"Reset",
+    custom:"Custom",name:"Product name (optional)",
+    mPer:"Per litre",mPerShort:"/ L",mRatio:"Ratio",perA:"/",perB:"L",mRate:"Rate",perWord:"per",
+    ratePhNum:"Enter amount (number)",rateLocked:"Enter pack size first",
+    perTank:"Per tank",tankShort:"Tank",water:"Clean water",total:"Final volume",need:"Need",
+    packLab:"Pack size",packPh:"per bag/bottle, e.g. 1kg, 500g, 1L, 250ml",
+    packNeed:"Need",bagUnit:"bags",bottleUnit:"bottles",packMismatch:"⚠ Pack unit doesn't match chemical (solid/liquid)",
+    needPackMsg:"Enter pack size (solid/liquid)",needBasisMsg:"Enter per how many litres",
+    fill:"Fill to",
+    countTxt:n=>`${n} item${n!==1?"s":""}`,
+    shareTitle:"🌱 Tank Mix Recipe",
+    previewTitle:"Preview message (editable)",cancel:"Cancel",sendWA:"WhatsApp",
+    settings:"Settings",farms:"Farms",farmPh:"Enter farm name",noFarms:"No farms yet",
+    workers:"Workers",workerPh:"Enter worker name",noWorkers:"No workers yet",
+    sidPh:"Staff ID",namePh:"Name",importBtn:"Import Excel",
+    ariaAmount:"Amount",ariaBasis:"Per how many litres",ariaTreeFrom:"First tree number",ariaTreeTo:"Last tree number",
+    ariaZoneName:"Zone name",ariaRowName:"Row name",ariaRowGen:"Add row",ariaZoneGen:"Add zone",ariaFarmAdd:"Add farm name",ariaFarmName:"Farm name",
+    importReading:"Reading…",importEmpty:"No valid data in file",importFail:"Import failed — check the file format",
+    importNoNet:"Can't read Excel offline (needs internet to load the reader). Use a CSV file, or retry online.",
+    importDone:(a,s)=>`Imported ${a}${s?`, skipped ${s} duplicate ID${s!==1?"s":""}`:""}`,
+    importFmt:"Two columns: Staff ID, Name (.xlsx / .csv; CSV works offline)",
+    trash:"Trash",trashEmpty:"Trash is empty",restore:"Restore",purgeAll:"Empty trash",
+    purgeConfirm:"Permanently delete this item? Cannot be undone.",purgeAllConfirm:"Permanently delete everything in trash? Cannot be undone.",
+    confirmDelete:"Delete",purgeYes:"Delete forever",goSettings:"Go to Settings",
+    trashType:{farm:"Farm",zone:"Zone",row:"Row",worker:"Worker"},
+    scopeFarm:(z,r)=>`incl. ${z} zones, ${r} rows`,scopeZone:r=>`incl. ${r} rows`,
+    zonePh:"Enter zone name",noZones:"No zones yet (whole farm can be sprayed)",
+    zoneGenPh:"Name or range, e.g. A, A-Z, 1-50",zoneGenBtn:"Generate",zoneAddBtn:"Add",
+    zoneAddOne:n=>`Add "${n}"`,zoneDupOne:n=>`"${n}" already exists`,
+    zoneGenPreview:(t,n)=>`Will make ${t}, ${n} new`,
+    zoneGenBad:"Invalid format — use A-Z, AA-ZZ or 1-50",zoneGenTooBig:"Too many (max 2000)",
+    zonesCount:(n,t)=>`${n} zone${n!==1?"s":""} · ${t} trees`,
+    treesLab:"Trees",treesCount:n=>`${n} total`,treesBad:"invalid",
+    hasRows:"Rows",noRows:"No rows yet",rowPh:"Enter row name, e.g. C2",rowGenPh:n=>`Name or range, e.g. ${n||"C"}1, ${n||"C"}1-${n||"C"}20`,
+    rowsTotal:(r,t)=>`${r} row${r!==1?"s":""} · ${t} trees`,
+    zoneSummaryRows:(r,t)=>`${r} row${r!==1?"s":""} · ${t} trees`,zoneNoTrees:"no trees set",
+    lang:"中",
+    logBtnHome:"Log spraying",historyBtnHome:"Logs",
+    logTitle:"Log spraying",logWhen:"Date & time",logTargets:"Where sprayed",logWorkers:"Workers",logMix:"Mix (snapshot)",
+    logAddTarget:"Add location",logSave:"Save log",logSaved:"Saved",logNeedTarget:"Add at least one location",
+    logNeedWorker:"Select at least one worker",logNoWorkerYet:"No workers added yet",logAddWorkerPrompt:"You need at least one worker before logging. Go to Settings to add one now?",
+    logNoTarget:"No location added yet",logNoWorkers:"No workers yet (add them in Settings)",logMixEmpty:"No valid chemicals in the current mix",logNoFarms:"Add a farm in Settings first",
+    entireFarm:"Entire farm",treeShort:"Trees ",targetTitle:"Choose location",
+    zonePrefix:"Zone ",rowPrefix:"Row ",
+    crumbAll:"Farms",tpPickFarm:"Choose a farm",tpPickLevel:"Choose scope",
+    lvlFarm:"Entire farm",lvlZones:"By zone ›",lvlRows:"By row ›",lvlTrees:"By tree ›",
+    tpTapZones:"Tap zones (multi-select; tap again to remove)",tpTapRows:z=>`${z}: tap rows (multi-select)`,
+    tpPickZoneForRows:"Choose a zone",tpPickZoneForTrees:"Choose a zone",tpPickRowForTrees:z=>`${z}: choose a row`,
+    tpNoZones:"No zones in this farm",tpNoRows:"No rows in this zone",tpNoRowZones:"No zones with rows",
+    tpTreesIn:n=>`${n}: enter tree range`,tpTreesHint:"Single tree: same number, e.g. 7; range e.g. 5–12",
+    tpChosen:n=>`${n} selected`,tpDone:"Done",tpBack:"Back",tpBackZones:"Back to zones",tpSearchPh:"Search…",
+    wkSearchPh:"Search staff ID or name…",wkNoneSelected:"No workers selected",wkNoMatch:"No matching worker",wkMore:n=>`${n} more — refine your search`,
+    historyTitle:"Spray logs",historyEmpty:"No logs yet",exportExcel:"Export Excel",exportedCsv:"Exported CSV",
+    histTargets:"Where: ",histWorkers:"Workers: ",histMix:"Mix: ",histNoWorker:"(none)",histDelConfirm:"Delete this log?",
+    xlWhen:"Date/Time",xlFarm:"Farm",xlZone:"Zone",xlRow:"Row",xlTrees:"Trees",xlWorkers:"Workers",xlChem:"Chemical",xlPack:"Pack",xlAmount:"Amount",xlPacks:"Packs",xlTank:"Tank"}
+};
+let lang = localStorage.getItem("tm_lang")||"zh";
+
+let state = load() || { tank:"", chems:[ blankChem() ] };
+// normalize saved chems to the current shape (rate is a plain number; unit lives in rateUnit)
+state.chems = (state.chems||[]).map(c=>{
+  let rate = (c.rate!=null?String(c.rate):"");
+  // strip any stray unit letters from rate (older builds stored e.g. "50ml")
+  rate = rate.replace(/[^\d.]/g,"");
+  return {
+    id:c.id ?? (Date.now()+Math.random()),
+    name:c.name||"", rate, rateUnit:c.rateUnit||"", pack:c.pack||"",
+    mode:(c.mode||c.unit)==="ratio" ? "ratio" : "per_L",
+    basis:(c.basis!=null?String(c.basis).replace(/[^\d.]/g,""):"")
+  };
+});
+if(!state.chems.length) state.chems=[blankChem()];
+
+function blankChem(){ return {id:Date.now()+Math.random(), name:"", rate:"", rateUnit:"", pack:"", mode:"per_L", basis:"" }; }
+function load(){ try{return JSON.parse(localStorage.getItem("tm_state"))}catch(e){return null} }
+function save(){ localStorage.setItem("tm_state",JSON.stringify(state)); }
+
+// --- saved lists: farms (each with its own zones) + workers ---
+function loadLists(){
+  let d; try{ d=JSON.parse(localStorage.getItem("tm_lists")); }catch(e){ d=null; }
+  d = d || {};
+  const farms = (d.farms||[]).map(f=>({ id:f.id||newId(), name:f.name||"", deleted:f.deleted||undefined, zones:(f.zones||[]).map(z=>({
+    id:z.id||newId(), name:z.name||"", deleted:z.deleted||undefined,
+    tFrom:(z.tFrom!=null&&z.tFrom!==""?z.tFrom:"1"), tTo:(z.tTo!=null?z.tTo:""),
+    hasRows:!!z.hasRows,
+    rows:(z.rows||[]).map(r=>({id:r.id||newId(), name:r.name||"", deleted:r.deleted||undefined, tFrom:(r.tFrom!=null&&r.tFrom!==""?r.tFrom:"1"), tTo:(r.tTo!=null?r.tTo:"")}))
+  })) }));
+  return { farms, workers:(d.workers||[]).map(w=>({id:w.id||newId(), sid:w.sid||"", name:w.name||"", deleted:w.deleted||undefined})) };
+}
+function newId(){ return "id_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+let lists = loadLists();
+function saveLists(){ localStorage.setItem("tm_lists", JSON.stringify(lists)); }
+
+// --- application logs (spray events) ---
+// each: {id, ts (created), when (ISO date+time of spraying), targets:[...], workers:[{sid,name}], tank, chems:[...], deleted?}
+function loadLogs(){ try{ return JSON.parse(localStorage.getItem("tm_logs"))||[]; }catch(e){ return []; } }
+let logs = loadLogs();
+function saveLogs(){ localStorage.setItem("tm_logs", JSON.stringify(logs)); }
+function logAdd(rec){ rec.id=newId(); rec.ts=nowTs(); logs.push(rec); saveLogs(); return rec; }
+function logRemove(id){ const r=logs.find(x=>x.id===id); if(r){ r.deleted=nowTs(); saveLogs(); } }
+function logRestore(id){ const r=logs.find(x=>x.id===id); if(r){ delete r.deleted; saveLogs(); } }
+function aliveLogs(){ return logs.filter(x=>!x.deleted).slice().sort((a,b)=> (b.when||"").localeCompare(a.when||"") || b.ts-a.ts); }
+
+// soft-delete helpers: items carry a `deleted` timestamp; alive() filters them out
+function alive(arr){ return (arr||[]).filter(x=>!x.deleted); }
+// natural sort: splits names into text/number chunks so A2 < A10, C1 < C2 < C10
+function natCmp(a,b){
+  const ax=String(a).toLowerCase().match(/(\d+|\D+)/g)||[];
+  const bx=String(b).toLowerCase().match(/(\d+|\D+)/g)||[];
+  const n=Math.min(ax.length,bx.length);
+  for(let i=0;i<n;i++){
+    const an=ax[i], bn=bx[i];
+    const aNum=/^\d/.test(an), bNum=/^\d/.test(bn);
+    if(aNum&&bNum){ const d=parseInt(an,10)-parseInt(bn,10); if(d) return d; }
+    else if(an!==bn) return an<bn?-1:1;
+  }
+  return ax.length-bx.length;
+}
+// alive items sorted naturally by name
+function aliveSorted(arr){ return alive(arr).slice().sort((a,b)=>natCmp(a.name,b.name)); }
+function nowTs(){ return Date.now(); }
+
+// farms
+function farmAdd(name){
+  const nm=(name||"").trim(); if(!nm) return null;
+  if(alive(lists.farms).some(f=>f.name.toLowerCase()===nm.toLowerCase())) return null;
+  const f={id:newId(), name:nm, zones:[]}; lists.farms.push(f); saveLists(); return f;
+}
+function farmRename(id,name){ const f=lists.farms.find(x=>x.id===id); if(f){ f.name=(name||"").trim(); saveLists(); } }
+function farmRemove(id){ const f=lists.farms.find(x=>x.id===id); if(f){ f.deleted=nowTs(); saveLists(); } }
+// zones (scoped to a farm)
+function zoneAdd(farmId,name){
+  const f=lists.farms.find(x=>x.id===farmId); if(!f) return null;
+  const nm=(name||"").trim(); if(!nm) return null;
+  if(alive(f.zones).some(z=>z.name.toLowerCase()===nm.toLowerCase())) return null;
+  const z={id:newId(), name:nm, tFrom:"1", tTo:"", hasRows:false, rows:[]}; f.zones.push(z); saveLists(); return z;
+}
+function zoneRename(farmId,zoneId,name){ const f=lists.farms.find(x=>x.id===farmId); if(!f) return; const z=f.zones.find(x=>x.id===zoneId); if(z){ z.name=(name||"").trim(); saveLists(); } }
+function zoneSetTrees(farmId,zoneId,from,to){
+  const f=lists.farms.find(x=>x.id===farmId); if(!f) return; const z=f.zones.find(x=>x.id===zoneId); if(!z) return;
+  z.tFrom=(from===""||from==null)?"":String(from).replace(/[^\d]/g,"");
+  z.tTo=(to===""||to==null)?"":String(to).replace(/[^\d]/g,"");
+  saveLists();
+}
+// count trees from a from/to pair (0 if invalid)
+function rangeCount(from,to){
+  const a=parseInt(from,10), b=parseInt(to,10);
+  if(!(a>0)||!(b>0)||b<a) return 0;
+  return b-a+1;
+}
+// tree count for a simple zone
+function zoneTreeCount(z){ return rangeCount(z.tFrom, z.tTo); }
+// total trees in a zone whether simple or row-based (alive rows only)
+function zoneTotalTrees(z){
+  if(z.hasRows) return alive(z.rows).reduce((s,r)=>s+rangeCount(r.tFrom,r.tTo),0);
+  return zoneTreeCount(z);
+}
+function farmTotalTrees(f){ return alive(f.zones).reduce((s,z)=>s+zoneTotalTrees(z),0); }
+function zoneRemove(farmId,zoneId){ const z=findZone(farmId,zoneId); if(z){ z.deleted=nowTs(); saveLists(); } }
+
+// --- rows within a zone ---
+function findZone(farmId,zoneId){ const f=lists.farms.find(x=>x.id===farmId); return f? f.zones.find(z=>z.id===zoneId):null; }
+function zoneToggleRows(farmId,zoneId,on){ const z=findZone(farmId,zoneId); if(!z) return; z.hasRows=!!on; if(z.hasRows && !z.rows) z.rows=[]; saveLists(); }
+function rowAdd(farmId,zoneId,name){
+  const z=findZone(farmId,zoneId); if(!z) return null;
+  const nm=(name||"").trim(); if(!nm) return null;
+  if(alive(z.rows).some(r=>r.name.toLowerCase()===nm.toLowerCase())) return null;
+  const r={id:newId(), name:nm, tFrom:"1", tTo:""}; (z.rows=z.rows||[]).push(r); saveLists(); return r;
+}
+function rowsBulkAdd(farmId,zoneId,names){
+  const z=findZone(farmId,zoneId); if(!z) return 0; z.rows=z.rows||[];
+  let added=0;
+  names.forEach(nm=>{ nm=(nm||"").trim(); if(!nm) return;
+    if(alive(z.rows).some(r=>r.name.toLowerCase()===nm.toLowerCase())) return;
+    z.rows.push({id:newId(), name:nm, tFrom:"1", tTo:""}); added++;
+  });
+  if(added) saveLists(); return added;
+}
+function rowRename(farmId,zoneId,rowId,name){ const z=findZone(farmId,zoneId); if(!z) return; const r=(z.rows||[]).find(x=>x.id===rowId); if(r){ r.name=(name||"").trim(); saveLists(); } }
+function rowRemove(farmId,zoneId,rowId){ const z=findZone(farmId,zoneId); if(!z) return; const r=(z.rows||[]).find(x=>x.id===rowId); if(r){ r.deleted=nowTs(); saveLists(); } }
+function rowSetTrees(farmId,zoneId,rowId,from,to){
+  const z=findZone(farmId,zoneId); if(!z) return; const r=(z.rows||[]).find(x=>x.id===rowId); if(!r) return;
+  r.tFrom=(from===""||from==null)?"":String(from).replace(/[^\d]/g,"");
+  r.tTo=(to===""||to==null)?"":String(to).replace(/[^\d]/g,"");
+  saveLists();
+}
+
+// --- zone range generator ---
+// spreadsheet-style letters: A=1 .. Z=26, AA=27 .. ZZ=702
+function lettersToNum(s){
+  s=s.toUpperCase(); let n=0;
+  for(const ch of s){ if(ch<"A"||ch>"Z") return null; n=n*26+(ch.charCodeAt(0)-64); }
+  return n;
+}
+function numToLetters(n){
+  let s=""; while(n>0){ const r=(n-1)%26; s=String.fromCharCode(65+r)+s; n=Math.floor((n-1)/26); }
+  return s;
+}
+const ZONE_GEN_MAX = 2000; // safety cap
+// Expand "A-Z", "AA-ZZ", "1-50", "Zone 1-Zone 100" into a list of names.
+// Returns {names:[...]} or {error:"..."}.
+function expandZoneRange(input){
+  const raw=(input||"").trim();
+  if(!raw) return {error:"range"};
+  const m=raw.split(/\s*[-–—~]\s*/);   // split on hyphen/dash/tilde
+  // single name (no dash) -> just that one name
+  if(m.length===1) return {names:[raw]};
+  if(m.length!==2) return {error:"range"};
+  let [a,b]=m.map(s=>s.trim());
+  if(!a||!b) return {error:"range"};
+  // capture an optional shared prefix + trailing number, e.g. "Zone 1" .. "Zone 100"
+  const reNum=/^(.*?)(\d+)$/;
+  const na=a.match(reNum), nb=b.match(reNum);
+  let names=[];
+  if(na && nb){                          // numeric range (with optional prefix)
+    const prefixA=na[1], prefixB=nb[1];
+    if(prefixA.toLowerCase()!==prefixB.toLowerCase()) return {error:"range"};
+    let s=parseInt(na[2],10), e=parseInt(nb[2],10);
+    if(s>e) [s,e]=[e,s];
+    if(e-s+1>ZONE_GEN_MAX) return {error:"toobig"};
+    for(let i=s;i<=e;i++) names.push(`${prefixA}${i}`);
+  } else {                               // letter range
+    let s=lettersToNum(a), e=lettersToNum(b);
+    if(s==null||e==null) return {error:"range"};
+    if(s>e) [s,e]=[e,s];
+    if(e-s+1>ZONE_GEN_MAX) return {error:"toobig"};
+    for(let i=s;i<=e;i++) names.push(numToLetters(i));
+  }
+  return {names};
+}
+// add many zones to a farm, skipping duplicates; returns count added
+function zonesBulkAdd(farmId, names){
+  const f=lists.farms.find(x=>x.id===farmId); if(!f) return 0;
+  let added=0;
+  names.forEach(nm=>{
+    nm=(nm||"").trim(); if(!nm) return;
+    if(f.zones.some(z=>z.name.toLowerCase()===nm.toLowerCase())) return;
+    f.zones.push({id:newId(), name:nm, tFrom:"1", tTo:"", hasRows:false, rows:[]}); added++;
+  });
+  if(added) saveLists();
+  return added;
+}
+// workers (flat) — each has a staff ID (sid, reusable) + name, plus a stable internal id
+function workerSidTaken(sid, exceptId){
+  const s=(sid||"").trim().toLowerCase(); if(!s) return false;
+  return alive(lists.workers).some(w=> w.id!==exceptId && (w.sid||"").trim().toLowerCase()===s);
+}
+function workerAdd(sid, name){
+  const s=(sid||"").trim().toUpperCase(), nm=(name||"").trim();
+  if(!s && !nm) return null;
+  if(s && workerSidTaken(s)) return {error:"dupe"};   // active staff ID clash
+  const w={id:newId(), sid:s, name:nm}; lists.workers.push(w); saveLists(); return w;
+}
+function workerSetSid(id, sid){
+  const w=lists.workers.find(x=>x.id===id); if(!w) return false;
+  const s=(sid||"").trim().toUpperCase();
+  if(s && workerSidTaken(s, id)) return false;         // reject clash, keep old value
+  w.sid=s; saveLists(); return true;
+}
+function workerRename(id,name){ const w=lists.workers.find(x=>x.id===id); if(w){ w.name=(name||"").trim(); saveLists(); } }
+function workerRemove(id){ const w=lists.workers.find(x=>x.id===id); if(w){ w.deleted=nowTs(); saveLists(); } }
+// bulk import: rows of {sid,name}; skips clashes with active staff IDs; returns {added,skipped}
+function workersBulkImport(rows){
+  let added=0, skipped=0;
+  rows.forEach(r=>{
+    const s=(r.sid||"").trim().toUpperCase(), nm=(r.name||"").trim();
+    if(!s && !nm) return;
+    if(s && workerSidTaken(s)){ skipped++; return; }
+    lists.workers.push({id:newId(), sid:s, name:nm}); added++;
+  });
+  if(added) saveLists();
+  return {added, skipped};
+}
+
+// --- trash: collect, restore, purge (across farms/zones/rows/workers) ---
+// returns a flat list of trashed items with enough context to restore/purge
+function collectTrash(){
+  const out=[];
+  lists.farms.forEach(f=>{
+    if(f.deleted){ out.push({type:"farm", label:f.name||"(farm)", ts:f.deleted, ref:{fid:f.id}, sub:trashSub(f)}); }
+    (f.zones||[]).forEach(z=>{
+      if(!f.deleted && z.deleted){ out.push({type:"zone", label:`${f.name} › ${z.name||"(zone)"}`, ts:z.deleted, ref:{fid:f.id,zid:z.id}, sub:trashSub(z)}); }
+      (z.rows||[]).forEach(r=>{
+        if(!f.deleted && !z.deleted && r.deleted){ out.push({type:"row", label:`${f.name} › ${z.name} › ${r.name||"(row)"}`, ts:r.deleted, ref:{fid:f.id,zid:z.id,rid:r.id}}); }
+      });
+    });
+  });
+  lists.workers.forEach(w=>{ if(w.deleted){ const lbl=w.sid?`[${w.sid}] ${w.name||""}`.trim():(w.name||"(worker)"); out.push({type:"worker", label:lbl, ts:w.deleted, ref:{wid:w.id}}); } });
+  out.sort((a,b)=>b.ts-a.ts);
+  return out;
+}
+function trashSub(item){
+  // describe what rides along (zones/rows) so the user knows the scope
+  if(item.zones){ const zc=item.zones.length, rc=item.zones.reduce((s,z)=>s+((z.rows||[]).length),0); return {zones:zc, rows:rc}; }
+  if(item.rows){ return {rows:(item.rows||[]).length}; }
+  return null;
+}
+function trashRestore(ref){
+  if(ref.rid){ const z=findZone(ref.fid,ref.zid); const r=z&&(z.rows||[]).find(x=>x.id===ref.rid); if(r) delete r.deleted; }
+  else if(ref.zid){ const z=findZone(ref.fid,ref.zid); if(z) delete z.deleted; }
+  else if(ref.fid){ const f=lists.farms.find(x=>x.id===ref.fid); if(f) delete f.deleted; }
+  else if(ref.wid){ const w=lists.workers.find(x=>x.id===ref.wid); if(w) delete w.deleted; }
+  saveLists();
+}
+function trashPurge(ref){
+  if(ref.rid){ const z=findZone(ref.fid,ref.zid); if(z) z.rows=(z.rows||[]).filter(x=>x.id!==ref.rid); }
+  else if(ref.zid){ const f=lists.farms.find(x=>x.id===ref.fid); if(f) f.zones=(f.zones||[]).filter(x=>x.id!==ref.zid); }
+  else if(ref.fid){ lists.farms=lists.farms.filter(x=>x.id!==ref.fid); }
+  else if(ref.wid){ lists.workers=lists.workers.filter(x=>x.id!==ref.wid); }
+  saveLists();
+}
+function trashPurgeAll(){
+  lists.farms=lists.farms.filter(f=>!f.deleted);
+  lists.farms.forEach(f=>{ f.zones=(f.zones||[]).filter(z=>!z.deleted); f.zones.forEach(z=>{ z.rows=(z.rows||[]).filter(r=>!r.deleted); }); });
+  lists.workers=lists.workers.filter(w=>!w.deleted);
+  saveLists();
+}
+
+
+function tankVol(){
+  const v=parseFloat(state.tank); return (v>0)?v:0;
+}
+
+// Parse free-text rate like "500g", "1.5 kg", "500ml", "1L" (case-insensitive, space optional).
+// Returns {num, family:'mass'|'vol', baseUnit:'g'|'ml', baseVal (g or ml)} or null.
+function parseRate(txt){
+  if(txt==null) return null;
+  const m = String(txt).trim().match(/^([\d.]+)\s*(kg|g|ml|l)?$/i);
+  if(!m || !(parseFloat(m[1])>0)) return null;
+  const num = parseFloat(m[1]);
+  const u = (m[2]||"").toLowerCase();
+  // default to ml (liquid) when no unit typed
+  switch(u){
+    case "kg": return {num, family:"mass", baseUnit:"g",  baseVal:num*1000};
+    case "g":  return {num, family:"mass", baseUnit:"g",  baseVal:num};
+    case "l":  return {num, family:"vol",  baseUnit:"ml", baseVal:num*1000};
+    case "ml":
+    default:   return {num, family:"vol",  baseUnit:"ml", baseVal:num};
+  }
+}
+
+// The package determines the unit family. The rate field is a plain NUMBER only.
+// returns {base, baseUnit, disp, dispUnit, family, ok, needPack} for the whole tank
+function calcChem(c){
+  const V=tankVol();
+  if(!V) return {ok:false};
+  const pk = parseRate(c.pack);          // package is the single source of truth for the family
+  if(!pk) return {ok:false, needPack:true};
+  const family  = pk.family;             // 'mass' (g) or 'vol' (ml)
+  const baseUnit = family==="mass" ? "g" : "ml";
+  const N = parseFloat(c.rate);
+  if(!(N>0)) return {ok:false};
+  let base;
+  if(c.mode==="ratio"){                  // 1 : N  (product : water)
+    base = (V/N)*1000;                   // g or ml of product for the whole tank
+  } else {                               // amount (in chosen unit) per (basis) litres of water
+    const basis = parseFloat(c.basis);
+    if(!(basis>0)) return {ok:false, needBasis:true};   // require an explicit per-litres value
+    // convert the entered amount to base units (g or ml) using the chosen rate unit
+    const unit = c.rateUnit || (family==="mass"?"g":"ml");
+    const toBase = (unit==="kg"||unit==="l") ? 1000 : 1;
+    const amountBase = N * toBase;       // amount per `basis` litres, in base units
+    base = amountBase * (V/basis);       // scale to the whole tank
+  }
+  const d = scaleUnit(base, family);
+  const packs = base / pk.baseVal;       // exact bags/bottles; family always matches now
+  return {ok:true, base, baseUnit, disp:d.val, dispUnit:d.unit, family, packs, packMismatch:false};
+}
+
+// ml -> L past 1000 ; g -> kg past 1000
+function scaleUnit(amount, family){
+  if(family==="mass") return amount>=1000 ? {val:amount/1000, unit:"kg"} : {val:amount, unit:"g"};
+  return amount>=1000 ? {val:amount/1000, unit:"L"} : {val:amount, unit:"ml"};
+}
+
+function fmt(n){
+  if(!isFinite(n)) return "–";
+  if(n>=1000) return Math.round(n).toLocaleString();
+  if(n>=100) return (Math.round(n*10)/10).toLocaleString();
+  if(n>=1) return (Math.round(n*100)/100).toLocaleString();
+  return (Math.round(n*1000)/1000).toLocaleString();
+}
+
+function renderVols(){
+  const el=$("#customVol");
+  if(el && el.value!==String(state.tank)) el.value=state.tank;
+}
+
+// updates only the "per tank" result line of one card, preserving input focus
+function updateResult(card,c){
+  const res=calcChem(c);
+  const val=card.querySelector(".result .val");
+  const sub=card.querySelector(".result .sub");
+  const pks=card.querySelector(".result .packs");
+  if(!val) return;
+  if(res.ok){
+    val.innerHTML = `${fmt(res.disp)} <small>${res.dispUnit}</small>`;
+    val.className = "val";
+    sub.textContent = "";
+  } else if(res.needPack){
+    val.innerHTML = `<span class="need-pack">${STR[lang].needPackMsg}</span>`;
+    val.className = "val"; sub.textContent="";
+  } else if(res.needBasis){
+    val.innerHTML = `<span class="need-pack">${STR[lang].needBasisMsg}</span>`;
+    val.className = "val"; sub.textContent="";
+  } else {
+    val.textContent = "–"; val.className="val bad"; sub.textContent="";
+  }
+  if(pks) pks.innerHTML = packLine(res, STR[lang]);
+}
+
+// "Need 2 bags/bottles" / pack-mismatch warning / empty when no pack entered
+function packLine(res, S){
+  if(!res || !res.ok) return "";
+  if(res.packMismatch) return `<span class="pack-warn">${S.packMismatch}</span>`;
+  if(res.packs==null) return "";
+  const unit = res.family==="mass" ? S.bagUnit : S.bottleUnit;
+  return `${S.packNeed} <b>${fmt(res.packs)}</b> ${unit}`;
+}
+
+function renderChems(){
+  const S=STR[lang];
+  const host=$("#chemList"); host.innerHTML="";
+  state.chems.forEach((c,i)=>{
+    const res=calcChem(c);
+    const card=document.createElement("div"); card.className="chem";
+    const isRatio = c.mode==="ratio";
+    const hasPack = !!parseRate(c.pack);       // package is required before rate is usable
+    const initDisp = res.ok
+      ? `${fmt(res.disp)} <small>${res.dispUnit}</small>`
+      : (res.needPack ? `<span class="need-pack">${S.needPackMsg}</span>` : (res.needBasis ? `<span class="need-pack">${S.needBasisMsg}</span>` : "–"));
+    const initSub = "";
+    const rateVal = (c.rate!=null?String(c.rate):"").replace(/"/g,'&quot;');
+    const packVal = (c.pack!=null?String(c.pack):"").replace(/"/g,'&quot;');
+    // rate-unit options depend on the package family: mass -> g/kg, vol -> ml/L
+    const pk = parseRate(c.pack);
+    const fam = pk ? pk.family : "mass";
+    const u1 = fam==="mass" ? "g"  : "ml";
+    const u2 = fam==="mass" ? "kg" : "L";
+    const rUnit = c.rateUnit || u1;   // default to the small unit
+    card.innerHTML=`
+      <div class="chem-top">
+        <input class="chem-name" aria-label="${S.name}" placeholder="${S.name}" value="${(c.name||"").replace(/"/g,'&quot;')}">
+        <button class="del" title="delete">🗑</button>
+      </div>
+      <div class="pack-row">
+        <span class="pack-lab">${S.packLab}</span>
+        <input class="pack-in" aria-label="${S.packLab}" inputmode="text" type="text" value="${packVal}" placeholder="${S.packPh}">
+      </div>
+      <div class="seg mode-seg">
+        <button data-mode="per_L" class="${!isRatio?'on':''}">${S.mRate}</button>
+        <button data-mode="ratio" class="${isRatio?'on':''}">${S.mRatio}</button>
+      </div>
+      ${isRatio ? `
+      <div class="rate-wrap">
+        <span class="rate-pre">1 :</span>
+        <input class="rate-in ratio" aria-label="${S.mRatio}" inputmode="decimal" type="text" value="${rateVal}" placeholder="">
+      </div>` : `
+      <div class="rate-line">
+        <input class="rate-in amt" aria-label="${S.ariaAmount}" inputmode="decimal" type="text" value="${rateVal}" placeholder="">
+        <div class="unit-seg">
+          <button class="unit-btn ${rUnit===u1?'on':''}" data-unit="${u1}">${u1}</button>
+          <button class="unit-btn ${rUnit===u2?'on':''}" data-unit="${u2}">${u2}</button>
+        </div>
+        <span class="rate-per">${S.perWord}</span>
+        <input class="basis-in" aria-label="${S.ariaBasis}" inputmode="decimal" type="text" value="${(c.basis!=null?String(c.basis):'').replace(/"/g,'&quot;')}" placeholder="">
+        <span class="rate-perL">L</span>
+      </div>`}
+      <div class="result">
+        <span class="lab">${S.perTank}</span>
+        <span style="text-align:right">
+          <span class="val ${(res.ok||res.needPack)?'':'bad'}">${initDisp}</span>
+          <span class="sub">${initSub}</span>
+          <span class="packs">${packLine(res,S)}</span>
+        </span>
+      </div>`;
+    const nameI=card.querySelector(".chem-name");
+    nameI.oninput=e=>{ c.name=e.target.value; save(); renderSummary(); };
+    const packI=card.querySelector(".pack-in");
+    packI.oninput=e=>{
+      c.pack=e.target.value; save();
+      // update the g/kg <-> ml/L toggle labels in place based on the pack family
+      const pk2=parseRate(c.pack);
+      const fam2 = pk2 ? pk2.family : fam;
+      const nu1 = fam2==="mass" ? "g" : "ml";
+      const nu2 = fam2==="mass" ? "kg" : "L";
+      const btns=card.querySelectorAll(".unit-btn");
+      if(btns.length===2){
+        // if family changed, reset the chosen unit to the new default
+        if(pk2 && fam2!==fam){ c.rateUnit=""; }
+        const cur = c.rateUnit || nu1;
+        btns[0].dataset.unit=nu1; btns[0].textContent=nu1; btns[0].classList.toggle("on", cur===nu1);
+        btns[1].dataset.unit=nu2; btns[1].textContent=nu2; btns[1].classList.toggle("on", cur===nu2);
+      }
+      updateResult(card,c); renderSummary();
+    };
+    const rateI=card.querySelector(".rate-in");
+    rateI.oninput=e=>{
+      const cleaned=e.target.value.replace(/[^\d.]/g,"");
+      if(cleaned!==e.target.value) e.target.value=cleaned;
+      c.rate=cleaned; save(); updateResult(card,c); renderSummary();
+    };
+    card.querySelectorAll(".mode-seg button").forEach(b=>{
+      b.onclick=()=>{
+        if(c.mode===b.dataset.mode) return;
+        c.mode=b.dataset.mode; c.rate="";      // number means different things per mode — clear
+        save(); renderChems(); renderSummary();
+      };
+    });
+    card.querySelectorAll(".unit-btn").forEach(b=>{
+      b.onclick=()=>{ c.rateUnit=b.dataset.unit; save(); renderChems(); renderSummary(); };
+    });
+    const basisI=card.querySelector(".basis-in");
+    if(basisI){
+      basisI.oninput=e=>{
+        const cleaned=e.target.value.replace(/[^\d.]/g,"");
+        if(cleaned!==e.target.value) e.target.value=cleaned;
+        c.basis=cleaned; save(); updateResult(card,c); renderSummary();
+      };
+    }
+    card.querySelector(".del").onclick=()=>{
+      if(state.chems.length===1){ state.chems=[blankChem()]; }
+      else state.chems.splice(i,1);
+      save(); renderAll();
+    };
+    host.appendChild(card);
+  });
+  $("#chemCount").textContent=S.countTxt(state.chems.length);
+}
+
+function renderSummary(){
+  const S=STR[lang], V=tankVol();
+  const host=$("#sumRows"); host.innerHTML="";
+  let any=false;
+  state.chems.forEach(c=>{
+    const res=calcChem(c);
+    if(!res.ok) return;
+    any=true;
+    const nm = c.name?.trim() || (lang==="zh"?"未命名药剂":"Unnamed");
+    const row=document.createElement("div"); row.className="srow";
+    row.innerHTML=`<span>${nm}</span><span class="q">${fmt(res.disp)} <small style="color:var(--dim);font-weight:400">${res.dispUnit}</small></span>`;
+    host.appendChild(row);
+  });
+  if(V && any){
+    const water=document.createElement("div"); water.className="srow water tot";
+    water.innerHTML=`<span>${S.water}</span><span class="q">${fmt(V)} L</span>`;
+    host.appendChild(water);
+  }
+  if(!any && V){
+    const e=document.createElement("div"); e.className="srow";
+    e.innerHTML=`<span style="color:var(--dim2)">${lang==="zh"?"输入药剂用量…":"Enter chemical rates…"}</span><span></span>`;
+    host.appendChild(e);
+  }
+  if(!V){
+    const e=document.createElement("div"); e.className="srow";
+    e.innerHTML=`<span style="color:var(--red)">${lang==="zh"?"请选择或输入水箱容量":"Select or enter tank volume"}</span><span></span>`;
+    host.appendChild(e);
+  }
+}
+
+function renderText(){
+  const S=STR[lang];
+  document.documentElement.lang = lang==="zh"?"zh":"en";
+  $("#t-title").textContent=S.title;
+  $("#t-tank").textContent=S.tank; $("#t-chems").textContent=S.chems;
+  $("#t-add").textContent=S.add; $("#t-recipe").textContent=S.recipe;
+  $("#langBtn").textContent=S.lang;
+  $("#t-share").textContent=S.share; $("#resetBtn").textContent=S.reset;
+  $("#t-logBtn").textContent=S.logBtnHome; $("#t-historyBtn").textContent=S.historyBtnHome;
+}
+function renderAll(){ renderText(); renderVols(); renderChems(); renderSummary();
+  if(!$("#settingsPanel").hidden) renderSettings(); }
+
+$("#addBtn").onclick=()=>{ state.chems.push(blankChem()); save(); renderChems(); renderSummary(); };
+$("#customVol").oninput=e=>{
+  state.tank=e.target.value; save();
+  $$("#chemList .chem").forEach((card,i)=>updateResult(card,state.chems[i]));
+  renderSummary();
+};
+$("#langBtn").onclick=()=>{ lang=lang==="zh"?"en":"zh"; localStorage.setItem("tm_lang",lang); renderAll(); };
+$("#resetBtn").onclick=()=>{ state={tank:"",chems:[blankChem()]}; save(); renderAll(); };
+
+// --- settings panel ---
+$("#settingsBtn").onclick=()=>{ $("#settingsPanel").hidden=false; renderSettings(); };
+$("#settingsBack").onclick=()=>{ $("#settingsPanel").hidden=true; };
+$("#farmAddBtn").onclick=()=>{ const inp=$("#farmAdd"); farmAdd(inp.value); inp.value=""; inp.focus(); renderFarmList(); };
+$("#farmAdd").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#farmAddBtn").click(); });
+$("#workerAddBtn").onclick=()=>{
+  const sidI=$("#workerAddSid"), nmI=$("#workerAdd");
+  const res=workerAdd(sidI.value, nmI.value);
+  if(res && res.error==="dupe"){ sidI.classList.add("dupe"); setTimeout(()=>sidI.classList.remove("dupe"),1200); return; }
+  sidI.value=""; nmI.value=""; sidI.focus(); renderWorkerList();
+};
+$("#workerAdd").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#workerAddBtn").click(); });
+$("#workerAddSid").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#workerAdd").focus(); });
+$("#workerAddSid").addEventListener("input",e=>{ const p=e.target.selectionStart; e.target.value=e.target.value.toUpperCase(); e.target.setSelectionRange(p,p); });
+$("#trashPurgeAll").onclick=async()=>{ if(await askConfirm(STR[lang].purgeAllConfirm, {yes:STR[lang].purgeYes})){ trashPurgeAll(); renderSettings(); } };
+
+// --- worker Excel/CSV import ---
+$("#workerImport").onclick=()=>$("#workerFile").click();
+$("#workerFile").onchange=async e=>{
+  const file=e.target.files&&e.target.files[0]; if(!file) return;
+  const hint=$("#workerImportHint");
+  hint.textContent=STR[lang].importReading; hint.className="import-hint";
+  try{
+    const rows=await parseWorkerFile(file);
+    if(!rows.length){ hint.textContent=STR[lang].importEmpty; hint.className="import-hint err"; }
+    else{
+      const {added,skipped}=workersBulkImport(rows);
+      hint.textContent=STR[lang].importDone(added,skipped);
+      hint.className="import-hint ok";
+      renderWorkerList();
+    }
+  }catch(err){
+    const msg = (err && err.message==="XLSX load failed") ? STR[lang].importNoNet : STR[lang].importFail;
+    hint.textContent=msg; hint.className="import-hint err";
+  }
+  e.target.value="";  // allow re-importing same file
+};
+// parse xlsx/xls/csv -> [{sid,name}]; expects two columns (Staff ID, Name), header optional
+async function parseWorkerFile(file){
+  const name=file.name.toLowerCase();
+  let matrix=[];
+  if(name.endsWith(".csv")){
+    const text=await file.text();
+    matrix=text.split(/\r?\n/).filter(l=>l.trim()!=="").map(l=>splitCsvLine(l));
+  }else{
+    const XLSX=await loadSheetJS();
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:"array"});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    matrix=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false});
+  }
+  // drop a header row if it looks like labels (non-numeric-ish first cell containing "id"/"name"/staff)
+  if(matrix.length){
+    const h=(matrix[0]||[]).map(c=>String(c==null?"":c).toLowerCase());
+    if(h.some(c=>/id|name|staff|工号|姓名|员工/.test(c))) matrix=matrix.slice(1);
+  }
+  return matrix.map(r=>({ sid:String(r[0]==null?"":r[0]).trim(), name:String(r[1]==null?"":r[1]).trim() }))
+               .filter(r=>r.sid||r.name);
+}
+function splitCsvLine(line){
+  const out=[]; let cur="", q=false;
+  for(let i=0;i<line.length;i++){ const c=line[i];
+    if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else { if(c===','){ out.push(cur); cur=""; } else if(c==='"'){ q=true; } else cur+=c; }
+  }
+  out.push(cur); return out.map(s=>s.trim());
+}
+let _sheetjs=null;
+function loadSheetJS(){
+  if(_sheetjs) return _sheetjs;
+  _sheetjs=new Promise((resolve,reject)=>{
+    if(window.XLSX){ resolve(window.XLSX); return; }
+    const s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload=()=>window.XLSX?resolve(window.XLSX):reject(new Error("XLSX load failed"));
+    s.onerror=()=>reject(new Error("XLSX load failed"));
+    document.head.appendChild(s);
+  });
+  return _sheetjs;
+}
+$("#workerAdd").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#workerAddBtn").click(); });
+
+function renderSettings(){
+  const S=STR[lang];
+  $("#t-settings").textContent=S.settings;
+  $("#t-farmsH").textContent=S.farms;
+  $("#t-workersH").textContent=S.workers;
+  $("#t-trashH").textContent=S.trash;
+  $("#farmAdd").placeholder=S.farmPh; $("#farmAdd").setAttribute("aria-label", S.farmPh);
+  $("#workerAdd").placeholder=S.namePh; $("#workerAdd").setAttribute("aria-label", S.namePh);
+  $("#workerAddSid").placeholder=S.sidPh; $("#workerAddSid").setAttribute("aria-label", S.sidPh);
+  $("#workerImport").textContent=S.importBtn;
+  $("#workerFmt").textContent=S.importFmt;
+  renderFarmList();
+  renderWorkerList();
+  renderTrash();
+}
+function renderTrash(){
+  const S=STR[lang], host=$("#trashList"); host.innerHTML="";
+  const items=collectTrash();
+  const purgeAllBtn=$("#trashPurgeAll");
+  purgeAllBtn.textContent=S.purgeAll; purgeAllBtn.hidden=items.length===0;
+  if(!items.length){
+    const e=document.createElement("div"); e.className="ent-empty"; e.textContent=S.trashEmpty;
+    host.appendChild(e); return;
+  }
+  items.forEach(it=>{
+    const row=document.createElement("div"); row.className="trash-row";
+    let scope="";
+    if(it.type==="farm" && it.sub) scope=` · ${S.scopeFarm(it.sub.zones, it.sub.rows)}`;
+    else if(it.type==="zone" && it.sub && it.sub.rows) scope=` · ${S.scopeZone(it.sub.rows)}`;
+    row.innerHTML=`
+      <div class="trash-info">
+        <span class="trash-type ttype-${it.type}">${S.trashType[it.type]}</span>
+        <span class="trash-label">${esc(it.label)}${scope}</span>
+      </div>
+      <div class="trash-acts">
+        <button class="trash-restore">${S.restore}</button>
+        <button class="trash-purge" aria-label="purge">🗑</button>
+      </div>`;
+    row.querySelector(".trash-restore").onclick=()=>{ trashRestore(it.ref); renderSettings(); };
+    row.querySelector(".trash-purge").onclick=async()=>{
+      if(await askConfirm(S.purgeConfirm, {yes:S.purgeYes})){ trashPurge(it.ref); renderSettings(); }
+    };
+    host.appendChild(row);
+  });
+}
+function esc(s){ return (s||"").replace(/"/g,'&quot;'); }
+
+const zoneOpen = new Set();   // farm ids whose zone list is expanded (per session)
+const zoneDetailOpen = new Set();   // zone ids whose detail (rows/tree range) is expanded
+
+// build one zone row: simple tree range, or a rows sub-section
+function zoneRowHTML(f,z,S){
+  const total=zoneTotalTrees(z);
+  const treeUI = z.hasRows
+    ? rowsSectionHTML(z,S,total)
+    : `<div class="zone-trees">
+         <span class="zt-lab">${S.treesLab}</span>
+         <input class="zt-from" aria-label="${S.ariaTreeFrom}" inputmode="numeric" type="text" value="${esc(z.tFrom)}">
+         <span class="zt-dash">–</span>
+         <input class="zt-to" aria-label="${S.ariaTreeTo}" inputmode="numeric" type="text" value="${esc(z.tTo)}">
+         <span class="zt-count">${zoneTreeCount(z)?S.treesCount(zoneTreeCount(z)):""}</span>
+       </div>`;
+  const open = zoneDetailOpen.has(z.id);
+  // compact summary shown on the header line so a collapsed zone is still informative
+  const summary = z.hasRows
+    ? S.zoneSummaryRows(alive(z.rows).length, total)
+    : (zoneTreeCount(z)? S.treesCount(zoneTreeCount(z)) : S.zoneNoTrees);
+  return `
+    <div class="zone-row" data-zid="${z.id}">
+      <div class="zone-main">
+        <button class="zone-caret ${open?'open':''}" aria-expanded="${open}" aria-label="expand">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <div class="zone-idblock">
+          <input class="zone-name" aria-label="${S.ariaZoneName}" value="${esc(z.name)}">
+          <span class="zone-sum">${summary}</span>
+        </div>
+        <label class="rows-toggle"><input type="checkbox" class="rows-chk" ${z.hasRows?'checked':''}>${S.hasRows}</label>
+        <button class="zone-del" aria-label="delete">🗑</button>
+      </div>
+      <div class="zone-detail" ${open?'':'hidden'}>${treeUI}</div>
+    </div>`;
+}
+function rowsSectionHTML(z,S,total){
+  const rowsHTML=aliveSorted(z.rows).map(r=>{
+    const rc=rangeCount(r.tFrom,r.tTo);
+    return `
+    <div class="row-row" data-rid="${r.id}">
+      <input class="row-name" aria-label="${S.ariaRowName}" value="${esc(r.name)}">
+      <span class="zt-lab">${S.treesLab}</span>
+      <input class="rt-from" aria-label="${S.ariaTreeFrom}" inputmode="numeric" type="text" value="${esc(r.tFrom)}">
+      <span class="zt-dash">–</span>
+      <input class="rt-to" aria-label="${S.ariaTreeTo}" inputmode="numeric" type="text" value="${esc(r.tTo)}">
+      <span class="rt-count">${rc?S.treesCount(rc):""}</span>
+      <button class="row-del" aria-label="delete">🗑</button>
+    </div>`;}).join("");
+  return `
+    <div class="rows-sec">
+      <div class="rows-total">${S.rowsTotal(alive(z.rows).length, total)}</div>
+      <div class="row-list">${rowsHTML||`<div class="zone-empty">${S.noRows}</div>`}</div>
+      <div class="row-gen-row">
+        <input class="row-gen" aria-label="${S.ariaRowGen}" type="text" placeholder="${S.rowGenPh(z.name)}">
+        <button class="row-genbtn">${S.zoneAddBtn}</button>
+      </div>
+      <div class="row-gen-hint"></div>
+    </div>`;
+}
+
+function renderFarmList(){
+  const S=STR[lang], host=$("#farmList"); host.innerHTML="";
+  const farms=aliveSorted(lists.farms);
+  if(!farms.length){
+    const e=document.createElement("div"); e.className="ent-empty"; e.textContent=S.noFarms;
+    host.appendChild(e); return;
+  }
+  farms.forEach(f=>{
+    const card=document.createElement("div"); card.className="farm-card";
+    const zoneRows = aliveSorted(f.zones).map(z=>zoneRowHTML(f,z,S)).join("");
+    const expanded = zoneOpen.has(f.id);
+    const zc = alive(f.zones).length;
+    card.innerHTML=`
+      <div class="ent-row farm-row">
+        <input class="ent-name" aria-label="${S.ariaFarmName||'Farm name'}" value="${esc(f.name)}">
+        <button class="ent-del" aria-label="delete">🗑</button>
+      </div>
+      <div class="zones">
+        ${zc ? `<button class="zone-toggle ${expanded?'open':''}" aria-expanded="${expanded}">
+          <span class="ztg-caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+          <span class="ztg-label">${S.zonesCount(zc, farmTotalTrees(f))}</span>
+        </button>
+        <div class="zone-rows" ${expanded?'':'hidden'}>${zoneRows}</div>`
+        : `<div class="zone-empty">${S.noZones}</div>`}
+        <div class="zone-gen-row">
+          <input class="zone-gen" aria-label="${S.ariaZoneGen}" type="text" placeholder="${S.zoneGenPh}">
+          <button class="zone-genbtn">${S.zoneAddBtn}</button>
+        </div>
+        <div class="zone-gen-hint"></div>
+      </div>`;
+    // farm rename / delete
+    card.querySelector(".farm-row .ent-name").onchange=e=>{ farmRename(f.id, e.target.value); };
+    card.querySelector(".farm-row .ent-del").onclick=()=>{ farmRemove(f.id); zoneOpen.delete(f.id); renderSettings(); };
+    // zone list collapse/expand
+    const toggle=card.querySelector(".zone-toggle");
+    if(toggle){
+      toggle.onclick=()=>{
+        if(zoneOpen.has(f.id)) zoneOpen.delete(f.id); else zoneOpen.add(f.id);
+        const rows=card.querySelector(".zone-rows");
+        const open=zoneOpen.has(f.id);
+        rows.hidden=!open; toggle.classList.toggle("open",open); toggle.setAttribute("aria-expanded",open);
+      };
+    }
+    // zone generator (handles single names AND ranges)
+    const gi=card.querySelector(".zone-gen");
+    const ghint=card.querySelector(".zone-gen-hint");
+    const previewGen=()=>{
+      const v=gi.value.trim();
+      if(!v){ ghint.textContent=""; ghint.className="zone-gen-hint"; return; }
+      const r=expandZoneRange(v);
+      if(r.error==="toobig"){ ghint.textContent=S.zoneGenTooBig; ghint.className="zone-gen-hint err"; return; }
+      if(r.error){ ghint.textContent=S.zoneGenBad; ghint.className="zone-gen-hint err"; return; }
+      // count how many are new (not already present)
+      const newCount=r.names.filter(nm=>!alive(f.zones).some(z=>z.name.toLowerCase()===nm.toLowerCase())).length;
+      const first=r.names[0], last=r.names[r.names.length-1];
+      // single name: simpler hint
+      ghint.textContent = r.names.length===1
+        ? (newCount? S.zoneAddOne(first) : S.zoneDupOne(first))
+        : `${S.zoneGenPreview(r.names.length,newCount)} (${first} … ${last})`;
+      ghint.className="zone-gen-hint ok";
+    };
+    gi.oninput=previewGen;
+    const doGen=()=>{
+      const r=expandZoneRange(gi.value.trim());
+      if(!r.names){ previewGen(); return; }
+      const added=zonesBulkAdd(f.id, r.names);
+      if(added) zoneOpen.add(f.id);   // auto-expand so new zones are visible
+      gi.value=""; renderFarmList();
+      setTimeout(()=>{ const fc=[...$$(".farm-card")].find(el=>el.querySelector(".farm-row .ent-name").value===f.name);
+        fc && fc.querySelector(".zone-gen") && fc.querySelector(".zone-gen").focus(); },0);
+    };
+    card.querySelector(".zone-genbtn").onclick=doGen;
+    gi.addEventListener("keydown",e=>{ if(e.key==="Enter") doGen(); });
+    // zone rename / delete / rows-toggle / tree range / row handlers
+    card.querySelectorAll(".zone-row").forEach(zr=>{
+      const zid=zr.dataset.zid;
+      // caret: expand/collapse this zone's detail in place
+      const caret=zr.querySelector(".zone-caret");
+      if(caret) caret.onclick=()=>{
+        const detail=zr.querySelector(".zone-detail");
+        const sumEl=zr.querySelector(".zone-sum");
+        if(zoneDetailOpen.has(zid)){
+          zoneDetailOpen.delete(zid); detail.hidden=true; caret.classList.remove("open"); caret.setAttribute("aria-expanded","false");
+          // refresh the collapsed summary from current data
+          const z=findZone(f.id,zid);
+          if(z && sumEl){ sumEl.textContent = z.hasRows ? S.zoneSummaryRows(alive(z.rows).length, zoneTotalTrees(z)) : (zoneTreeCount(z)?S.treesCount(zoneTreeCount(z)):S.zoneNoTrees); }
+        } else {
+          zoneDetailOpen.add(zid); detail.hidden=false; caret.classList.add("open"); caret.setAttribute("aria-expanded","true");
+        }
+      };
+      zr.querySelector(".zone-name").onchange=e=>{ zoneRename(f.id, zid, e.target.value); };
+      zr.querySelector(".zone-del").onclick=()=>{ zoneRemove(f.id, zid); renderSettings(); };
+      // rows on/off toggle
+      const chk=zr.querySelector(".rows-chk");
+      if(chk) chk.onchange=e=>{ zoneToggleRows(f.id, zid, e.target.checked); zoneDetailOpen.add(zid); renderFarmList(); };
+      // simple-zone tree range (only present when not hasRows)
+      const zfrom=zr.querySelector(".zone-trees .zt-from"), zto=zr.querySelector(".zone-trees .zt-to"), zcount=zr.querySelector(".zone-trees .zt-count");
+      if(zfrom && zto){
+        const onTrees=()=>{
+          zfrom.value=zfrom.value.replace(/[^\d]/g,""); zto.value=zto.value.replace(/[^\d]/g,"");
+          zoneSetTrees(f.id, zid, zfrom.value, zto.value);
+          const z=findZone(f.id,zid), tc=zoneTreeCount(z);
+          zcount.textContent = tc?S.treesCount(tc):""; const bad=(zfrom.value&&zto.value&&tc===0);
+          zcount.classList.toggle("err", !!bad); if(bad) zcount.textContent=S.treesBad;
+        };
+        zfrom.oninput=onTrees; zto.oninput=onTrees;
+      }
+      // rows sub-section (only present when hasRows)
+      const rlist=zr.querySelector(".row-list");
+      if(rlist){
+        rlist.querySelectorAll(".row-row").forEach(rr=>{
+          const rid=rr.dataset.rid;
+          rr.querySelector(".row-name").onchange=e=>{ rowRename(f.id, zid, rid, e.target.value); };
+          rr.querySelector(".row-del").onclick=()=>{ rowRemove(f.id, zid, rid); renderSettings(); };
+          const rf=rr.querySelector(".rt-from"), rt=rr.querySelector(".rt-to"), rc=rr.querySelector(".rt-count");
+          const onRowTrees=()=>{
+            rf.value=rf.value.replace(/[^\d]/g,""); rt.value=rt.value.replace(/[^\d]/g,"");
+            rowSetTrees(f.id, zid, rid, rf.value, rt.value);
+            const cnt=rangeCount(rf.value, rt.value);
+            rc.textContent = cnt?S.treesCount(cnt):""; const bad=(rf.value&&rt.value&&cnt===0);
+            rc.classList.toggle("err", !!bad); if(bad) rc.textContent=S.treesBad;
+            // update the zone total live
+            const tot=zr.querySelector(".rows-total"); const z=findZone(f.id,zid);
+            if(tot) tot.textContent=S.rowsTotal(alive(z.rows).length, zoneTotalTrees(z));
+          };
+          rf.oninput=onRowTrees; rt.oninput=onRowTrees;
+        });
+        // row generator (handles single names AND ranges)
+        const rgi=zr.querySelector(".row-gen"), rghint=zr.querySelector(".row-gen-hint");
+        const z=findZone(f.id,zid);
+        const previewRows=()=>{
+          const v=rgi.value.trim();
+          if(!v){ rghint.textContent=""; rghint.className="row-gen-hint"; return; }
+          const r=expandZoneRange(v);
+          if(r.error==="toobig"){ rghint.textContent=S.zoneGenTooBig; rghint.className="row-gen-hint err"; return; }
+          if(r.error){ rghint.textContent=S.zoneGenBad; rghint.className="row-gen-hint err"; return; }
+          const newCount=r.names.filter(nm=>!alive(z.rows).some(x=>x.name.toLowerCase()===nm.toLowerCase())).length;
+          rghint.textContent = r.names.length===1
+            ? (newCount? S.zoneAddOne(r.names[0]) : S.zoneDupOne(r.names[0]))
+            : `${S.zoneGenPreview(r.names.length,newCount)} (${r.names[0]} … ${r.names[r.names.length-1]})`;
+          rghint.className="row-gen-hint ok";
+        };
+        rgi.oninput=previewRows;
+        const doRowGen=()=>{ const r=expandZoneRange(rgi.value.trim()); if(!r.names){ previewRows(); return; }
+          rowsBulkAdd(f.id, zid, r.names); rgi.value=""; renderFarmList(); };
+        zr.querySelector(".row-genbtn").onclick=doRowGen;
+        rgi.addEventListener("keydown",e=>{ if(e.key==="Enter") doRowGen(); });
+      }
+    });
+    host.appendChild(card);
+  });
+}
+function renderWorkerList(){
+  const S=STR[lang], host=$("#workerList"); host.innerHTML="";
+  const workers=alive(lists.workers).slice().sort((a,b)=>{
+    const s=natCmp(a.sid||"~", b.sid||"~"); return s || natCmp(a.name, b.name);
+  });
+  if(!workers.length){
+    const e=document.createElement("div"); e.className="ent-empty"; e.textContent=S.noWorkers;
+    host.appendChild(e); return;
+  }
+  workers.forEach(w=>{
+    const row=document.createElement("div"); row.className="ent-row worker-row";
+    row.innerHTML=`<input class="w-sid" aria-label="${S.sidPh}" value="${esc(w.sid)}" placeholder="${S.sidPh}">
+                   <input class="ent-name" aria-label="${S.namePh}" value="${esc(w.name)}" placeholder="${S.namePh}">
+                   <button class="ent-del" aria-label="delete">🗑</button>`;
+    const sidI=row.querySelector(".w-sid");
+    sidI.oninput=e=>{ const p=e.target.selectionStart; e.target.value=e.target.value.toUpperCase(); e.target.setSelectionRange(p,p); };
+    sidI.onchange=e=>{
+      const ok=workerSetSid(w.id, e.target.value);
+      if(!ok){ e.target.value=w.sid; sidI.classList.add("dupe"); setTimeout(()=>sidI.classList.remove("dupe"),1200); }
+    };
+    row.querySelector(".ent-name").onchange=e=>{ workerRename(w.id, e.target.value); };
+    row.querySelector(".ent-del").onclick=()=>{ workerRemove(w.id); renderSettings(); };
+    host.appendChild(row);
+  });
+}
+
+
+function buildShareText(){
+  const S=STR[lang], V=tankVol();
+  const vStr = V?`${fmt(V)} L`:"—";
+  const lines=[];
+  lines.push(`${S.recipe}`);                // plain header (no volume)
+  lines.push("");
+  let any=false;
+  state.chems.forEach(c=>{
+    const res=calcChem(c);
+    if(!res.ok) return; any=true;
+    const nm = c.name?.trim() || (lang==="zh"?"未命名药剂":"Unnamed");
+    let line = `• ${nm}: ${fmt(res.disp)} ${res.dispUnit}`;
+    if(res.packs!=null && !res.packMismatch){
+      const unit = res.family==="mass" ? S.bagUnit : S.bottleUnit;
+      line += ` (${fmt(res.packs)} ${unit})`;
+    }
+    lines.push(line);
+  });
+  if(!any) lines.push(lang==="zh"?"（未输入药剂）":"(no chemicals)");
+  lines.push("");
+  lines.push(`${S.water}: ${vStr}`);
+  lines.push("");
+  lines.push(lang==="zh"?"用量仅供参考，请以标签为准。":"Reference only — always follow the label.");
+  return lines.join("\n");
+}
+
+$("#shareBtn").onclick=()=>{ openSharePreview(buildShareText()); };
+
+function openSharePreview(text){
+  const S=STR[lang];
+  const ov=document.createElement("div"); ov.className="modal-ov"; ov.id="shareModal";
+  ov.innerHTML=`
+    <div class="modal">
+      <div class="modal-h">${S.previewTitle}</div>
+      <textarea class="modal-ta" spellcheck="false"></textarea>
+      <div class="modal-btns">
+        <button class="modal-cancel">${S.cancel}</button>
+        <button class="modal-send">
+          <svg class="wa-ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.71.306 1.263.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.002-5.45 4.436-9.884 9.888-9.884a9.82 9.82 0 0 1 6.988 2.896 9.83 9.83 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.412-18.297A11.82 11.82 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.88 11.88 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.82 11.82 0 0 0-3.48-8.413"/></svg>
+          <span>${S.sendWA}</span>
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  const ta=ov.querySelector(".modal-ta");
+  ta.value=text;
+  const close=()=>ov.remove();
+  ov.querySelector(".modal-cancel").onclick=close;
+  ov.onclick=e=>{ if(e.target===ov) close(); };
+  ov.querySelector(".modal-send").onclick=()=>{
+    const txt=encodeURIComponent(ta.value);
+    window.open(`https://wa.me/?text=${txt}`,"_blank");
+    close();
+  };
+}
+
+renderAll();
+
+// ===================== LOGGING (spray events) =====================
+let logDraft = null; // {when, targets:[], workerIds:Set}
+function pad2(n){ return String(n).padStart(2,"0"); }
+function nowLocalInput(){
+  const d=new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+function mixSnapshot(){
+  const V=tankVol(); const chems=[];
+  state.chems.forEach(c=>{
+    const res=calcChem(c); if(!res.ok) return;
+    chems.push({
+      name:(c.name||"").trim(), pack:(c.pack||"").trim(),
+      mode:c.mode, rate:String(c.rate||""), basis:String(c.basis||"1"),
+      disp:res.disp, dispUnit:res.dispUnit,
+      packs:(res.packs!=null&&!res.packMismatch)?res.packs:null,
+      packUnit:res.family==="mass"?STR[lang].bagUnit:STR[lang].bottleUnit
+    });
+  });
+  return { tank:V||"", chems };
+}
+$("#logBtn").onclick=async()=>{
+  const S=STR[lang];
+  if(!alive(lists.workers).length){
+    toast(S.logNoWorkerYet);
+    if(await askConfirm(S.logAddWorkerPrompt, {yes:S.goSettings, danger:false})){ $("#settingsPanel").hidden=false; renderSettings(); setTimeout(()=>{ const el=$("#workerAddSid"); if(el){ el.scrollIntoView({block:"center"}); el.focus(); } },200); }
+    return;
+  }
+  logDraft={ when:nowLocalInput(), targets:[], workerIds:new Set() }; renderLogSheet(); $("#logSheet").hidden=false;
+};
+$("#logCancel").onclick=()=>{ $("#logSheet").hidden=true; logDraft=null; };
+$("#logSheet").onclick=e=>{ if(e.target===$("#logSheet")){ $("#logSheet").hidden=true; logDraft=null; } };
+function renderLogSheet(){
+  const S=STR[lang];
+  $("#t-logTitle").textContent=S.logTitle; $("#t-logWhen").textContent=S.logWhen;
+  $("#t-logTargets").textContent=S.logTargets; $("#t-logWorkers").textContent=S.logWorkers;
+  $("#t-logMix").textContent=S.logMix; $("#logAddTarget").textContent="＋ "+S.logAddTarget;
+  $("#logCancel").textContent=S.cancel; $("#logSave").textContent=S.logSave;
+  $("#logWhen").value=logDraft.when; $("#logWhen").onchange=e=>{ logDraft.when=e.target.value; };
+  renderLogTargets(); renderLogWorkers(); renderLogMix();
+}
+function targetLabel(t){
+  const S=STR[lang];
+  const f=lists.farms.find(x=>x.id===t.fid); if(!f) return "?";
+  if(t.kind==="farm") return `${f.name} · ${S.entireFarm}`;
+  const z=(f.zones||[]).find(x=>x.id===t.zid);
+  const zoneN = z ? `${S.zonePrefix}${z.name}` : "?";
+  if(t.kind==="zone") return `${f.name} › ${zoneN}`;
+  if(t.kind==="row"){ const r=z&&(z.rows||[]).find(x=>x.id===t.rid); return `${f.name} › ${zoneN} › ${r?S.rowPrefix+r.name:"?"}`; }
+  if(t.kind==="trees"){
+    const r=z&&(z.rows||[]).find(x=>x.id===t.rid);
+    const base=`${f.name} › ${zoneN}${r?` › ${S.rowPrefix}${r.name}`:""}`;
+    const span = (t.from===t.to) ? `${S.treeShort}${t.from}` : `${S.treeShort}${t.from}–${t.to}`;
+    return `${base} · ${span}`;
+  }
+  return "?";
+}
+function renderLogTargets(){
+  const S=STR[lang], host=$("#logTargetList"); host.innerHTML="";
+  if(!logDraft.targets.length){ const e=document.createElement("div"); e.className="log-empty"; e.textContent=S.logNoTarget; host.appendChild(e); return; }
+  logDraft.targets.forEach((t,i)=>{
+    const row=document.createElement("div"); row.className="target-chip";
+    row.innerHTML=`<span>${esc(targetLabel(t))}</span><button aria-label="remove">✕</button>`;
+    row.querySelector("button").onclick=()=>{ logDraft.targets.splice(i,1); renderLogTargets(); };
+    host.appendChild(row);
+  });
+}
+function renderLogWorkers(){
+  const S=STR[lang], host=$("#logWorkerChips"); host.innerHTML="";
+  const ws=alive(lists.workers).slice().sort((a,b)=>natCmp(a.sid||"~",b.sid||"~")||natCmp(a.name,b.name));
+  if(!ws.length){ const e=document.createElement("div"); e.className="log-empty"; e.textContent=S.logNoWorkers; host.appendChild(e); return; }
+  const wLabel=w=> w.sid?`${w.sid} · ${w.name}`:w.name;
+  const toggle=id=>{ if(logDraft.workerIds.has(id)) logDraft.workerIds.delete(id); else logDraft.workerIds.add(id); renderLogWorkers(); };
+
+  if(ws.length<=10){
+    // small list: simple chips
+    ws.forEach(w=>{
+      const chip=document.createElement("button"); chip.className="chip"+(logDraft.workerIds.has(w.id)?" on":"");
+      chip.textContent=wLabel(w); chip.onclick=()=>toggle(w.id); host.appendChild(chip);
+    });
+    return;
+  }
+  // large list: selected chips on top + search box + scrollable filtered checklist
+  const selWrap=document.createElement("div"); selWrap.className="chip-wrap wk-selected";
+  const selected=ws.filter(w=>logDraft.workerIds.has(w.id));
+  if(selected.length){
+    selected.forEach(w=>{
+      const chip=document.createElement("button"); chip.className="chip on"; chip.textContent=wLabel(w)+"  ✕";
+      chip.onclick=()=>toggle(w.id); selWrap.appendChild(chip);
+    });
+  } else {
+    const e=document.createElement("div"); e.className="log-empty"; e.textContent=S.wkNoneSelected; selWrap.appendChild(e);
+  }
+  host.appendChild(selWrap);
+
+  const search=document.createElement("input"); search.className="wk-search"; search.type="text";
+  search.setAttribute("aria-label", S.wkSearchPh);
+  search.placeholder=S.wkSearchPh; search.value=logDraft._wkQuery||"";
+  host.appendChild(search);
+
+  const listBox=document.createElement("div"); listBox.className="wk-list"; host.appendChild(listBox);
+  const drawList=()=>{
+    const q=(logDraft._wkQuery||"").trim().toLowerCase();
+    listBox.innerHTML="";
+    const filtered=ws.filter(w=> !q || (w.sid||"").toLowerCase().includes(q) || (w.name||"").toLowerCase().includes(q));
+    if(!filtered.length){ listBox.innerHTML=`<div class="log-empty">${S.wkNoMatch}</div>`; return; }
+    filtered.slice(0,200).forEach(w=>{
+      const on=logDraft.workerIds.has(w.id);
+      const item=document.createElement("button"); item.className="wk-item"+(on?" on":"");
+      item.innerHTML=`<span class="wk-check">${on?"✓":""}</span><span>${esc(wLabel(w))}</span>`;
+      item.onclick=()=>{ if(logDraft.workerIds.has(w.id)) logDraft.workerIds.delete(w.id); else logDraft.workerIds.add(w.id);
+        // update just the checkmark + selected chips without losing search focus
+        item.classList.toggle("on"); item.querySelector(".wk-check").textContent=item.classList.contains("on")?"✓":"";
+        redrawSelected();
+      };
+      listBox.appendChild(item);
+    });
+    if(filtered.length>200){ const m=document.createElement("div"); m.className="log-empty"; m.textContent=S.wkMore(filtered.length-200); listBox.appendChild(m); }
+  };
+  const redrawSelected=()=>{
+    selWrap.innerHTML="";
+    const sel=ws.filter(w=>logDraft.workerIds.has(w.id));
+    if(!sel.length){ const e=document.createElement("div"); e.className="log-empty"; e.textContent=S.wkNoneSelected; selWrap.appendChild(e); return; }
+    sel.forEach(w=>{ const chip=document.createElement("button"); chip.className="chip on"; chip.textContent=wLabel(w)+"  ✕";
+      chip.onclick=()=>{ logDraft.workerIds.delete(w.id); renderLogWorkers(); }; selWrap.appendChild(chip); });
+  };
+  search.oninput=e=>{ logDraft._wkQuery=e.target.value; drawList(); };
+  drawList();
+  // keep focus if user was typing
+  if(document.activeElement!==search && logDraft._wkFocus){ search.focus(); }
+}
+function renderLogMix(){
+  const S=STR[lang], host=$("#logMixPreview"), snap=mixSnapshot();
+  if(!snap.chems.length){ host.innerHTML=`<div class="log-empty">${S.logMixEmpty}</div>`; return; }
+  let html=`<div class="mix-tank">${S.tankShort}: ${snap.tank?fmt(snap.tank)+" L":"—"}</div>`;
+  snap.chems.forEach(c=>{ const nm=c.name||(lang==="zh"?"未命名":"Unnamed"); const packs=c.packs!=null?` (${fmt(c.packs)} ${c.packUnit})`:"";
+    html+=`<div class="mix-line">• ${esc(nm)}: ${fmt(c.disp)} ${c.dispUnit}${packs}</div>`; });
+  host.innerHTML=html;
+}
+$("#logAddTarget").onclick=()=>openTargetPicker();
+$("#targetCancel").onclick=()=>{ $("#targetSheet").hidden=true; };
+$("#targetSheet").onclick=e=>{ if(e.target===$("#targetSheet")) $("#targetSheet").hidden=true; };
+
+// ===== target picker: pick farm, then granularity (farm/zones/rows/trees) =====
+// tpNav: {step:'farm'} | {step:'level', fid} | {step:'zones'|'rows', fid} | {step:'rowsPickZone', fid} | {step:'treesPickZone'|'treesPickRow'|'trees', fid, zid, rid}
+let tpNav = null;
+function openTargetPicker(){
+  const S=STR[lang];
+  $("#t-targetTitle").textContent=S.targetTitle; $("#targetCancel").textContent=S.cancel;
+  const farms=aliveSorted(lists.farms);
+  tpNav = farms.length===1 ? {step:"level", fid:farms[0].id} : {step:"farm"};
+  renderTargetPicker();
+  $("#targetSheet").hidden=false;
+}
+function addTarget(t){ logDraft.targets.push(t); renderLogTargets(); }
+function closeTargetSheet(){ $("#targetSheet").hidden=true; }
+function tpFarm(){ return lists.farms.find(x=>x.id===tpNav.fid); }
+function tpZoneOf(zid){ const f=tpFarm(); return f&&(f.zones||[]).find(x=>x.id===zid); }
+
+function renderTargetCrumb(){
+  const S=STR[lang], host=$("#targetCrumb"); host.innerHTML="";
+  const parts=[];
+  const farms=aliveSorted(lists.farms);
+  if(farms.length>1) parts.push({label:S.crumbAll, go:()=>{ tpNav={step:"farm"}; renderTargetPicker(); }});
+  if(tpNav.fid){ const f=tpFarm(); parts.push({label:f?f.name:"?", go:()=>{ tpNav={step:"level", fid:tpNav.fid}; renderTargetPicker(); }}); }
+  parts.forEach((p,i)=>{
+    if(i>0){ const s=document.createElement("span"); s.className="crumb-sep"; s.textContent="›"; host.appendChild(s); }
+    const b=document.createElement("button"); b.className="crumb"+(i===parts.length-1?" cur":""); b.textContent=p.label;
+    if(i<parts.length-1) b.onclick=p.go; host.appendChild(b);
+  });
+}
+function tpBtn(label, cls, onClick){ const b=document.createElement("button"); b.className="tp-opt "+(cls||""); b.textContent=label; b.onclick=onClick; return b; }
+function tpEl(tag,cls,text){ const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e; }
+// is a target already chosen?
+function targetChosen(pred){ return logDraft.targets.some(pred); }
+
+// threshold above which we show a search box for zone/row lists
+const TP_SEARCH_THRESHOLD = 30;
+const TP_RENDER_CAP = 300;   // cap DOM buttons; search narrows beyond this
+// Multi-select list with optional search. items have .name; opts={isOn(item), toggle(item, wasOn)}
+function renderMultiSelect(host, items, opts){
+  const S=STR[lang];
+  const listBox=document.createElement("div"); listBox.className="tp-mslist";
+  const useSearch = items.length > TP_SEARCH_THRESHOLD;
+  let query="";
+  const draw=()=>{
+    listBox.innerHTML="";
+    const q=query.trim().toLowerCase();
+    const filtered = q ? items.filter(it=>(it.name||"").toLowerCase().includes(q)) : items;
+    if(!filtered.length){ listBox.appendChild(tpEl("div","log-empty",S.wkNoMatch)); return; }
+    filtered.slice(0,TP_RENDER_CAP).forEach(it=>{
+      const on=opts.isOn(it);
+      const b=document.createElement("button"); b.className="tp-opt tp-multi"+(on?" on":"");
+      b.textContent=(on?"✓ ":"")+it.name;
+      b.onclick=()=>{
+        const wasOn=opts.isOn(it); opts.toggle(it, wasOn);
+        // in-place: just flip this button + refresh the Done count (no full re-render)
+        const nowOn=opts.isOn(it);
+        b.className="tp-opt tp-multi"+(nowOn?" on":""); b.textContent=(nowOn?"✓ ":"")+it.name;
+        const dc=host.querySelector(".tp-donecount"); if(dc) dc.textContent=S.tpChosen(logDraft.targets.length);
+      };
+      listBox.appendChild(b);
+    });
+    if(filtered.length>TP_RENDER_CAP){ listBox.appendChild(tpEl("div","log-empty",S.wkMore(filtered.length-TP_RENDER_CAP))); }
+  };
+  if(useSearch){
+    const s=document.createElement("input"); s.className="wk-search"; s.type="text"; s.placeholder=S.tpSearchPh; s.setAttribute("aria-label", S.tpSearchPh);
+    s.oninput=e=>{ query=e.target.value; draw(); };
+    host.appendChild(s);
+  }
+  host.appendChild(listBox);
+  draw();
+}
+// Drill list (single-select to go deeper) with optional search
+function renderDrillList(host, items, onPick){
+  const S=STR[lang];
+  const listBox=document.createElement("div"); listBox.className="tp-mslist";
+  const useSearch = items.length > TP_SEARCH_THRESHOLD;
+  let query="";
+  const draw=()=>{
+    listBox.innerHTML="";
+    const q=query.trim().toLowerCase();
+    const filtered = q ? items.filter(it=>(it.name||"").toLowerCase().includes(q)) : items;
+    if(!filtered.length){ listBox.appendChild(tpEl("div","log-empty",S.wkNoMatch)); return; }
+    filtered.slice(0,TP_RENDER_CAP).forEach(it=> listBox.appendChild(tpBtn(it.name,"tp-drill",()=>onPick(it))));
+    if(filtered.length>TP_RENDER_CAP){ listBox.appendChild(tpEl("div","log-empty",S.wkMore(filtered.length-TP_RENDER_CAP))); }
+  };
+  if(useSearch){
+    const s=document.createElement("input"); s.className="wk-search"; s.type="text"; s.placeholder=S.tpSearchPh; s.setAttribute("aria-label", S.tpSearchPh);
+    s.oninput=e=>{ query=e.target.value; draw(); };
+    host.appendChild(s);
+  }
+  host.appendChild(listBox);
+  draw();
+}
+
+function renderTargetPicker(){
+  const S=STR[lang], host=$("#targetPicker"); host.innerHTML="";
+  renderTargetCrumb();
+  const farms=aliveSorted(lists.farms);
+  if(!farms.length){ host.appendChild(tpEl("div","log-empty",S.logNoFarms)); return; }
+
+  // STEP: pick farm
+  if(tpNav.step==="farm"){
+    host.appendChild(tpEl("div","tp-scope",S.tpPickFarm));
+    farms.forEach(f=> host.appendChild(tpBtn(f.name,"tp-drill",()=>{ tpNav={step:"level", fid:f.id}; renderTargetPicker(); })));
+    return;
+  }
+
+  const f=tpFarm();
+  // STEP: pick granularity level
+  if(tpNav.step==="level"){
+    host.appendChild(tpEl("div","tp-scope",S.tpPickLevel));
+    // Entire farm — adds immediately and closes
+    host.appendChild(tpBtn(S.lvlFarm,"tp-farmopt",()=>{ addTarget({kind:"farm", fid:f.id}); closeTargetSheet(); }));
+    host.appendChild(tpBtn(S.lvlZones,"tp-drill",()=>{ tpNav={step:"zones", fid:f.id}; renderTargetPicker(); }));
+    host.appendChild(tpBtn(S.lvlRows,"tp-drill",()=>{ tpNav={step:"rowsPickZone", fid:f.id}; renderTargetPicker(); }));
+    host.appendChild(tpBtn(S.lvlTrees,"tp-drill",()=>{ tpNav={step:"treesPickZone", fid:f.id}; renderTargetPicker(); }));
+    return;
+  }
+
+  // STEP: zones — multi-select (tap to add/remove), then Done
+  if(tpNav.step==="zones"){
+    const zones=aliveSorted(f.zones);
+    host.appendChild(tpEl("div","tp-scope",S.tpTapZones));
+    if(!zones.length){ host.appendChild(tpEl("div","log-empty",S.tpNoZones)); }
+    renderMultiSelect(host, zones, {
+      isOn: z=>targetChosen(t=>t.kind==="zone"&&t.fid===f.id&&t.zid===z.id),
+      toggle: (z,on)=>{ if(on){ logDraft.targets=logDraft.targets.filter(t=>!(t.kind==="zone"&&t.fid===f.id&&t.zid===z.id)); } else { logDraft.targets.push({kind:"zone", fid:f.id, zid:z.id}); renderLogTargets(); } }
+    });
+    host.appendChild(tpDoneBar());
+    return;
+  }
+
+  // STEP: rows — first pick which zone, then multi-select rows
+  if(tpNav.step==="rowsPickZone"){
+    const zones=aliveSorted(f.zones).filter(z=>z.hasRows);
+    host.appendChild(tpEl("div","tp-scope",S.tpPickZoneForRows));
+    if(!zones.length){ host.appendChild(tpEl("div","log-empty",S.tpNoRowZones)); }
+    renderDrillList(host, zones, z=>{ tpNav={step:"rows", fid:f.id, zid:z.id}; renderTargetPicker(); });
+    return;
+  }
+  if(tpNav.step==="rows"){
+    const z=tpZoneOf(tpNav.zid), rows=aliveSorted(z.rows);
+    host.appendChild(tpEl("div","tp-scope",S.tpTapRows(z.name)));
+    if(!rows.length){ host.appendChild(tpEl("div","log-empty",S.tpNoRows)); }
+    renderMultiSelect(host, rows, {
+      isOn: r=>targetChosen(t=>t.kind==="row"&&t.fid===f.id&&t.zid===z.id&&t.rid===r.id),
+      toggle: (r,on)=>{ if(on){ logDraft.targets=logDraft.targets.filter(t=>!(t.kind==="row"&&t.fid===f.id&&t.zid===z.id&&t.rid===r.id)); } else { logDraft.targets.push({kind:"row", fid:f.id, zid:z.id, rid:r.id}); renderLogTargets(); } }
+    });
+    host.appendChild(tpDoneBar(()=>{ tpNav={step:"rowsPickZone", fid:f.id}; renderTargetPicker(); }, S.tpBackZones));
+    return;
+  }
+
+  // STEP: trees — pick zone, (pick row if zone has rows), then type range
+  if(tpNav.step==="treesPickZone"){
+    const zones=aliveSorted(f.zones);
+    host.appendChild(tpEl("div","tp-scope",S.tpPickZoneForTrees));
+    if(!zones.length){ host.appendChild(tpEl("div","log-empty",S.tpNoZones)); }
+    renderDrillList(host, zones, z=>{
+      tpNav = z.hasRows ? {step:"treesPickRow", fid:f.id, zid:z.id} : {step:"trees", fid:f.id, zid:z.id};
+      renderTargetPicker();
+    });
+    return;
+  }
+  if(tpNav.step==="treesPickRow"){
+    const z=tpZoneOf(tpNav.zid), rows=aliveSorted(z.rows);
+    host.appendChild(tpEl("div","tp-scope",S.tpPickRowForTrees(z.name)));
+    if(!rows.length){ host.appendChild(tpEl("div","log-empty",S.tpNoRows)); }
+    renderDrillList(host, rows, r=>{ tpNav={step:"trees", fid:f.id, zid:z.id, rid:r.id}; renderTargetPicker(); });
+    return;
+  }
+  if(tpNav.step==="trees"){
+    const z=tpZoneOf(tpNav.zid), r=z&&tpNav.rid&&(z.rows||[]).find(x=>x.id===tpNav.rid);
+    const def = r ? {from:r.tFrom,to:r.tTo} : {from:z.tFrom,to:z.tTo};
+    host.appendChild(tpEl("div","tp-scope",S.tpTreesIn(r?r.name:z.name)));
+    host.appendChild(tpEl("div","tp-hint",S.tpTreesHint));
+    const wrap=document.createElement("div"); wrap.className="tp-trees";
+    wrap.innerHTML=`<span class="zt-lab">${S.treeShort}</span>
+      <input class="tp-tf" aria-label="${S.ariaTreeFrom}" inputmode="numeric" type="text" value="${esc(def.from||"")}">
+      <span class="zt-dash">–</span>
+      <input class="tp-tt" aria-label="${S.ariaTreeTo}" inputmode="numeric" type="text" value="${esc(def.to||"")}">
+      <button class="tp-treebtn">＋</button>`;
+    const tf=wrap.querySelector(".tp-tf"), tt=wrap.querySelector(".tp-tt");
+    tf.oninput=e=>e.target.value=e.target.value.replace(/[^\d]/g,"");
+    tt.oninput=e=>e.target.value=e.target.value.replace(/[^\d]/g,"");
+    wrap.querySelector(".tp-treebtn").onclick=()=>{
+      const from=parseInt(tf.value,10), to=parseInt(tt.value,10);
+      if(!(from>0)||!(to>0)||to<from){ wrap.classList.add("bad"); setTimeout(()=>wrap.classList.remove("bad"),600); return; }
+      const t = r ? {kind:"trees", fid:f.id, zid:z.id, rid:r.id, from, to} : {kind:"trees", fid:f.id, zid:z.id, from, to};
+      addTarget(t); closeTargetSheet();
+    };
+    host.appendChild(wrap);
+    return;
+  }
+}
+// a "Done" bar for multi-select steps: shows count chosen + Done button
+function tpDoneBar(backFn, backLabel){
+  const S=STR[lang];
+  const bar=document.createElement("div"); bar.className="tp-donebar";
+  const n=logDraft.targets.length;
+  const info=document.createElement("span"); info.className="tp-donecount"; info.textContent=S.tpChosen(n);
+  bar.appendChild(info);
+  if(backFn){ const bk=document.createElement("button"); bk.className="tp-back"; bk.textContent=backLabel||S.tpBack; bk.onclick=backFn; bar.appendChild(bk); }
+  const done=document.createElement("button"); done.className="tp-done"; done.textContent=S.tpDone; done.onclick=closeTargetSheet;
+  bar.appendChild(done);
+  return bar;
+}
+
+
+$("#logSave").onclick=()=>{
+  const S=STR[lang];
+  const shake=()=>{ const b=$("#logSave"); b.classList.add("shake"); setTimeout(()=>b.classList.remove("shake"),400); };
+  if(!logDraft.targets.length){ toast(S.logNeedTarget); shake(); return; }
+  if(!logDraft.workerIds.size){ toast(S.logNeedWorker); shake(); return; }
+  const snap=mixSnapshot(); const workers=[];
+  logDraft.workerIds.forEach(id=>{ const w=lists.workers.find(x=>x.id===id); if(w) workers.push({sid:w.sid||"", name:w.name||""}); });
+  logAdd({ when:logDraft.when||nowLocalInput(), targets:logDraft.targets.map(t=>({ ...t, label:targetLabel(t) })), workers, tank:snap.tank, chems:snap.chems });
+  $("#logSheet").hidden=true; logDraft=null; toast(S.logSaved);
+};
+// in-app confirm dialog -> returns a Promise<bool>; reliable on iOS where native confirm() can be flaky
+function askConfirm(msg, opts){
+  const S=STR[lang]; opts=opts||{};
+  return new Promise(resolve=>{
+    $("#confirmMsg").textContent=msg;
+    $("#confirmNo").textContent=opts.no||S.cancel;
+    const yes=$("#confirmYes"); yes.textContent=opts.yes||S.confirmDelete;
+    yes.classList.toggle("danger", opts.danger!==false); // default danger styling
+    const ov=$("#confirmModal");
+    const cleanup=()=>{ ov.hidden=true; yes.onclick=null; $("#confirmNo").onclick=null; ov.onclick=null; };
+    yes.onclick=()=>{ cleanup(); resolve(true); };
+    $("#confirmNo").onclick=()=>{ cleanup(); resolve(false); };
+    ov.onclick=e=>{ if(e.target===ov){ cleanup(); resolve(false); } };
+    ov.hidden=false;
+  });
+}
+function toast(msg){
+  let t=document.getElementById("toast");
+  if(!t){ t=document.createElement("div"); t.id="toast"; t.className="toast"; document.body.appendChild(t); }
+  t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),1800);
+}
+$("#historyBtn").onclick=()=>{ $("#historyPanel").hidden=false; renderHistory(); };
+$("#historyBack").onclick=()=>{ $("#historyPanel").hidden=true; };
+$("#historyExport").onclick=()=>exportLogsExcel();
+function fmtWhen(iso){ if(!iso) return "—"; const d=new Date(iso); if(isNaN(d)) return iso;
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+function renderHistory(){
+  const S=STR[lang]; $("#t-historyTitle").textContent=S.historyTitle; $("#historyExport").textContent=S.exportExcel;
+  const host=$("#historyList"); host.innerHTML="";
+  const rows=aliveLogs();
+  if(!rows.length){ host.innerHTML=`<div class="ent-empty">${S.historyEmpty}</div>`; $("#historyExport").hidden=true; return; }
+  $("#historyExport").hidden=false;
+  rows.forEach(r=>{
+    const card=document.createElement("div"); card.className="hist-card";
+    const targets=(r.targets||[]).map(t=>esc(t.label||"")).join("<br>");
+    const workers=(r.workers||[]).map(w=>esc(w.sid?`${w.sid} · ${w.name}`:w.name)).join(", ")||`<span class="dim">${S.histNoWorker}</span>`;
+    const chems=(r.chems||[]).map(c=>{ const packs=c.packs!=null?` (${fmt(c.packs)} ${c.packUnit})`:"";
+      return `• ${esc(c.name||"")}: ${fmt(c.disp)} ${c.dispUnit}${packs}`; }).join("<br>")||`<span class="dim">—</span>`;
+    card.innerHTML=`
+      <div class="hist-top"><span class="hist-when">${fmtWhen(r.when)}</span><button class="hist-del" aria-label="delete">🗑</button></div>
+      <div class="hist-sec"><span class="hist-k">${S.histTargets}</span>${targets}</div>
+      <div class="hist-sec"><span class="hist-k">${S.histWorkers}</span>${workers}</div>
+      <div class="hist-sec"><span class="hist-k">${S.histMix}</span>${S.tankShort}: ${r.tank?fmt(r.tank)+" L":"—"}<br>${chems}</div>`;
+    card.querySelector(".hist-del").onclick=async()=>{ if(await askConfirm(S.histDelConfirm, {yes:S.confirmDelete})){ logRemove(r.id); renderHistory(); } };
+    host.appendChild(card);
+  });
+}
+async function exportLogsExcel(){
+  const S=STR[lang]; const rows=aliveLogs();
+  if(!rows.length){ toast(S.historyEmpty); return; }
+  const header=[S.xlWhen,S.xlFarm,S.xlZone,S.xlRow,S.xlTrees,S.xlWorkers,S.xlChem,S.xlPack,S.xlAmount,S.xlPacks,S.xlTank];
+  const data=[header];
+  rows.forEach(r=>{
+    const workers=(r.workers||[]).map(w=>w.sid?`${w.sid} ${w.name}`:w.name).join("; ");
+    const targets=(r.targets&&r.targets.length)?r.targets:[{}];
+    const chems=(r.chems&&r.chems.length)?r.chems:[{}];
+    targets.forEach(t=>{
+      const f=lists.farms.find(x=>x.id===t.fid);
+      const z=f&&(f.zones||[]).find(x=>x.id===t.zid);
+      const rr=z&&(z.rows||[]).find(x=>x.id===t.rid);
+      const farmN=f?f.name:(t.label||""); const zoneN=t.kind==="farm"?S.entireFarm:(z?z.name:""); const rowN=rr?rr.name:"";
+      const trees = t.kind==="trees" ? (t.from===t.to?`${t.from}`:`${t.from}-${t.to}`) : "";
+      chems.forEach(c=>{ data.push([ fmtWhen(r.when), farmN, zoneN, rowN, trees, workers,
+        c.name||"", c.pack||"", (c.disp!=null?`${fmt(c.disp)} ${c.dispUnit}`:""),
+        (c.packs!=null?`${fmt(c.packs)} ${c.packUnit}`:""), r.tank?`${fmt(r.tank)} L`:"" ]); });
+    });
+  });
+  try{
+    const XLSX=await loadSheetJS();
+    const ws=XLSX.utils.aoa_to_sheet(data);
+    ws["!cols"]=header.map((h,i)=>({wch:i===0?16:i===4?18:14}));
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Logs");
+    const d=new Date(); XLSX.writeFile(wb, `chemlog_${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}.xlsx`);
+  }catch(err){
+    const csv=data.map(r=>r.map(cell=>{ const s=String(cell==null?"":cell); return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s; }).join(",")).join("\n");
+    const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    const d=new Date(); a.download=`chemlog_${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}.csv`;
+    a.click(); URL.revokeObjectURL(a.href); toast(S.exportedCsv);
+  }
+}
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
